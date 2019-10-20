@@ -1,1 +1,0 @@
-/usr/bin/c++  -g   CMakeFiles/Count_Intersection_Area_Of_Triangle.dir/main.cpp.o  -o Count_Intersection_Area_Of_Triangle 
