@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Count_Intersection_Area_Of_Triangle"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Count_Intersection_Area_Of_Triangle">
+				<Option output="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Count_Intersection_Area_Of_Triangle" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 Count_Intersection_Area_Of_Triangle"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Count_Intersection_Area_Of_Triangle/fast">
+				<Option output="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Count_Intersection_Area_Of_Triangle" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/7"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/7"/>
+					<Add directory="/usr/include/c++/7/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 Count_Intersection_Area_Of_Triangle/fast"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j4 -f &quot;/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/BSPTree.h">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/BSPTree.hpp">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/Work_w_Polygon.h">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/Work_w_Polygon.hpp">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/line_2d.h">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/line_2d.hpp">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/main.cpp">
+			<Option target="Count_Intersection_Area_Of_Triangle"/>
+		</Unit>
+		<Unit filename="/home/denis/CLionProjects/3_semester_mipt/ILab_second_course/Operations_On_Polygons/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
