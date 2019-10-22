@@ -1,0 +1,3 @@
+#one triangle is full inclusion of another and two vertex of one lie on the different edges of another 
+2 2 6 2 2 8
+2 3 4 3 4 5

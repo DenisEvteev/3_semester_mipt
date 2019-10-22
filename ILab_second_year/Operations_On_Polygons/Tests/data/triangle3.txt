@@ -1,0 +1,3 @@
+#triangles produce pentagon in intersection and one vertex is common 
+0 0 6 0 3 6
+0 4 6 -4 6 4

@@ -1,0 +1,3 @@
+#one triangle is fully inclusion of another and one edge lies fully on the edge of another triangle
+0 0 8 0 3 5
+2 0 7 1 4 4

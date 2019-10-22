@@ -1,0 +1,3 @@
+#the six vertex polyogns in intersection of triangle
+0 0 10 0 5 7
+1 3 5 -2 8 6

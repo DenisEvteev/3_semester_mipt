@@ -1,0 +1,4 @@
+#triangles produce other triangle 
+#one part of edge of the first triangle lies on the other's triangle edge
+0 0 8 0 4 4
+2 2 6 2 2 6 

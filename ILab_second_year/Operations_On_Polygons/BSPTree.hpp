@@ -213,21 +213,34 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
                 if (!Check_Position_Last_Line(inside_edges, first_part, polygon_for_intersect))
                     Check_Position_Last_Line(inside_edges, second_part, polygon_for_intersect);
 
-                if (common_point)
-                    delete common_point;
+                delete common_point;
 
                 return;
             }
             break;
         }
 
+        case intersect(Full_Coincidence): {
+            /*we must to block pushing edge of triangle in case of full coincidence when processing with
+             * opposite order of triangles has already pushed this edge
+             * and as usual a lot depend on the orientation of the line segment
+             * We must remember that each line segment in inside_edges list has the right direction
+             * so we will have to compare opposite oriented line segment if it hasn't got the initial
+             * direction*/
+            if (line2D.is_counterclockwise) {
+                if (std::find(inside_edges.begin(), inside_edges.end(), line2D) == inside_edges.end())
+                    inside_edges.push_back(line2D);
+            } else {
+                line_type opposite_oriented_edge(line2D.pt2_, line2D.pt1_);
+                if (std::find(inside_edges.begin(), inside_edges.end(), opposite_oriented_edge) == inside_edges.end())
+                    inside_edges.push_back(opposite_oriented_edge);
+            }
+            return;
+        }
+
         case intersect(Full_Inclusion_In_Spliting_Line) : {
-            if (!line2D.is_counterclockwise) {
-                INSERT_CONVERT
-            } else
-                inside_edges.push_back(line2D);
-            if (common_point)
-                delete common_point;
+            Right_Insert(inside_edges, line2D);
+            delete common_point;
             return;
         }
 
@@ -237,8 +250,7 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
 
         default : {
             std::cout << "ERROR TYPE OF INTERSECTION!!!" << type_intersection << std::endl;
-            if (common_point)
-                delete common_point;
+            delete common_point;
             return;
         }
 
@@ -249,8 +261,18 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
         Check_Position_Last_Line(inside_edges, line2D, polygon_for_intersect);
     }
 
-    if (common_point)
-        delete common_point;
+    delete common_point;
+}
+
+template<typename T>
+void BSPTree<T>::Right_Insert(std::list<line_type> &inside_edges, const_line_reference line2D) {
+
+    if (!line2D.is_counterclockwise) {
+        line_type copy_line = line2D;
+        copy_line.swap_order();
+        inside_edges.push_back(copy_line);
+    } else
+        inside_edges.push_back(line2D);
 }
 
 template<typename T>
@@ -270,11 +292,7 @@ bool BSPTree<T>::Check_Position_Last_Line(std::list <line_type> &inside_edges, c
     }
 
     if (type_pos == pos(Inside)) {
-
-        if (!line2D.is_counterclockwise) {
-            INSERT_CONVERT
-        } else
-            inside_edges.push_back(line2D);
+        Right_Insert(inside_edges, line2D);
 
         return true;
     }
@@ -284,10 +302,7 @@ bool BSPTree<T>::Check_Position_Last_Line(std::list <line_type> &inside_edges, c
             return false;
         if (type_pos == pos(On) || type_pos == pos(Inside)) {
 
-            if (!line2D.is_counterclockwise) {
-                INSERT_CONVERT
-            } else
-                inside_edges.push_back(line2D);
+            Right_Insert(inside_edges, line2D);
 
             return true;
         }

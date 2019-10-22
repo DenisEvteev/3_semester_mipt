@@ -7,7 +7,7 @@
 
 
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
 #include <limits>
 
@@ -26,7 +26,8 @@ enum class Relationship_Type : int {
             Full_Inclusion_In_Spliting_Line,
     Full_Inclusion_Of_Spliting_Line,
     Spliting_Line_Above,
-    Spliting_Line_Below
+    Spliting_Line_Below,
+    Full_Coincidence
 
 };
 
@@ -53,7 +54,7 @@ public:
 
     point_2d() = default;
 
-    point_reference operator=(const_point_reference point) &;
+    point_2d &operator=(const_point_reference point) &;
 
     bool operator==(const_point_reference point) const;
 
@@ -128,7 +129,9 @@ public:
 
     line_2d(const_line_reference line2D);
 
-    line_reference operator=(const_line_reference line2D) &;
+    line_2d &operator=(const_line_reference line2D) &;
+
+    bool operator==(const_line_reference line2D) const;
 
 //    bool operator()(const_line_reference line1, const_line_reference line2)const;
     void check_order();

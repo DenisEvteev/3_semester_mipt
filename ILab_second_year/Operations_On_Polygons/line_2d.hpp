@@ -25,6 +25,14 @@ bool point_2d<T>::operator==(const_point_reference point) const {
 }
 
 template<typename T>
+bool line_2d<T>::operator==(const_line_reference line2D) const {
+    if (line2D.pt1_ == pt1_ && line2D.pt2_ == pt2_)
+        return true;
+
+    return false;
+}
+
+template<typename T>
 point_2d<T>::point_2d(const point_2d &point) {
     x_ = point.x_;
     y_ = point.y_;
@@ -166,6 +174,12 @@ typename line_2d<T>::coord_type line_2d<T>::Kross(const_point_reference pt1, con
 template<typename T>
 void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_intersect) const {
 
+    //case of full coincidence of two line segments
+    if (line2D.pt2_ == pt2_ && line2D.pt1_ == pt1_) {
+        *type_intersect = intersect(Full_Coincidence);
+        return;
+
+    }
     //case when the spliting line is vertical (very different case)
     if (Dot(guiding, {1, 0}) == 0) {
         Coincedence_In_Vertical_Case(line2D, type_intersect);

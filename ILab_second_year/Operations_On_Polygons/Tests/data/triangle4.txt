@@ -1,0 +1,4 @@
+#triangles produce quadrangle in intersection 
+#and one vertex of one lies on the edge of another triangle 
+2 3 6 3 2 7
+0 3 4 0 4 5

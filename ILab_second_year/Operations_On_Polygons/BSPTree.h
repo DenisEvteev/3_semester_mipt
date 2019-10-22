@@ -10,10 +10,6 @@
 #include <vector>
 #include <set>
 
-#define INSERT_CONVERT line_type copy_line = line2D;\
-                       copy_line.swap_order();\
-                       inside_edges.push_back(copy_line);\
-
 namespace bsp {
 
 #define pos(type) static_cast<int>(Point_Position::type)
@@ -64,7 +60,7 @@ namespace bsp {
         node_ptr get_root() const;
 
         //this constructor will accept the vector of set of coordinates and prepare it for creating the bsp tree of a polygon
-        BSPTree(const std::vector <point_2d<T>> &coords);
+        explicit BSPTree(const std::vector<point_2d<T>> &coords);
 
         //This is a recursive function for constructing the bsp tree for a polygon
         node_ptr Construct_Tree(iterator it, int pos_dist, int neg_dist, bool direction);
@@ -77,6 +73,8 @@ namespace bsp {
         void Make_Tree();
 
         void Clear_Bsp_Tree(node_ptr edge);
+
+        void Right_Insert(std::list<line_type> &inside_edges, const_line_reference line2D);
 
 
         /*my realization of bsp tree for polygons gives some disadvantages due to determination whether
