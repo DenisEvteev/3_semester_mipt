@@ -1,0 +1,3 @@
+#the two vertex lie on the edges of another triangle 
+0 0 6 0 4 6
+4 0 7 6 1 6
