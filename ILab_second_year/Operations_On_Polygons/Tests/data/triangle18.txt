@@ -1,0 +1,3 @@
+#triangles produced quadrangle in intersection and one part of the first triangle's  line lies on another triangle's edge
+-4 2 0 -3 0 5
+-5 1 0 0 0 6
