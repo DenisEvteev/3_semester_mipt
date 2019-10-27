@@ -8,13 +8,12 @@
 #include "line_2d.h"
 #include <list>
 #include <vector>
-#include <set>
+
+using namespace line_tools;
 
 namespace bsp {
 
-#define pos(type) static_cast<int>(Point_Position::type)
-
-    enum class Point_Position : int {
+    enum Point_Position {
         Somewhere,
         Inside,
         Outside,
@@ -25,6 +24,7 @@ namespace bsp {
     class BSPTree_Node {
         using const_line_reference = const line_2d<T> &;
         using node_ptr = BSPTree_Node *;
+
         node_ptr pos_child;
         node_ptr neg_child;
         line_2d<T> edge;
@@ -62,9 +62,6 @@ namespace bsp {
         //this constructor will accept the vector of set of coordinates and prepare it for creating the bsp tree of a polygon
         explicit BSPTree(const std::vector<point_2d<T>> &coords);
 
-        //This is a recursive function for constructing the bsp tree for a polygon
-        node_ptr Construct_Tree(iterator it, int pos_dist, int neg_dist, bool direction);
-
         void Polygon_Polygon_Intersection(std::list <line_type> &inside_edges, node_ptr polygon_which_intersect);
 
         void Partitioning_Line_Segment(std::list <line_type> &inside_edges, const_line_reference line2D,
@@ -73,9 +70,6 @@ namespace bsp {
         void Make_Tree();
 
         void Clear_Bsp_Tree(node_ptr edge);
-
-        void Right_Insert(std::list<line_type> &inside_edges, const_line_reference line2D);
-
 
         /*my realization of bsp tree for polygons gives some disadvantages due to determination whether
          * the point is inside, outside or on the polygon
@@ -97,9 +91,9 @@ namespace bsp {
 
 
         //It's so nice decision i think
-        void Point_Position_In_Polygon(const_point_reference point, node_ptr edge, int *type_pos) const;
+        void Point_Position_In_Polygon(const_point_reference point, node_ptr edge, int &type_pos) const;
 
-        void Check_Inside_Outside_Last_Edge(const_point_reference point, int *type_pos, node_ptr last_node) const;
+        void Check_Inside_Outside_Last_Edge(const_point_reference point, int &type_pos, node_ptr last_node) const;
 
         //This function returns true if it has added the element in list otherwise false
         bool
@@ -119,6 +113,12 @@ namespace bsp {
          * It seems to be not very understandable but i've decided to do like this in this realization*/
 
         std::list <line_type> edges;   //the list that contains all the edges of a polygon
+
+        //This is a recursive function for constructing the bsp tree for a polygon
+        node_ptr Construct_Tree(iterator it, int pos_dist, int neg_dist, bool direction);
+
+        void Right_Insert(std::list<line_type> &inside_edges, const_line_reference line2D);
+
 
     };
 

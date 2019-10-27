@@ -13,53 +13,25 @@
 
 #define NUL_LIMIT 1e-4
 
-#define intersect(type) static_cast<int>(Relationship_Type::type)
 
-enum class Relationship_Type : int {
-    Without_Crossing = 0,
-    Positive,
-    Negative,
-    Crossing,
-    One_Point,
-
-    //different type of coincedence of two line segments
-            Full_Inclusion_In_Spliting_Line,
-    Full_Inclusion_Of_Spliting_Line,
-    Spliting_Line_Above,
-    Spliting_Line_Below,
-    Full_Coincidence
-
-};
+namespace line_tools {
 
 template<typename T>
-class point_2d;
-
-template<typename T>
-std::istream &operator>>(std::istream &in, point_2d<T> &coords);
-
-
-//functor object due to it has an operator()
-template<typename T>
-class point_2d {
+struct point_2d {
     using coord_type = T;
     using const_point_reference = const point_2d<coord_type> &;
     using point_reference = point_2d<coord_type> &;
-public:
+
     coord_type x_;
     coord_type y_;
-public:
-    point_2d(coord_type x, coord_type y);
 
-    point_2d(const_point_reference point);
+    point_2d(coord_type x, coord_type y);
 
     point_2d() = default;
 
     point_2d &operator=(const_point_reference point) &;
 
     bool operator==(const_point_reference point) const;
-
-    friend std::istream &operator>><T>(std::istream &in, point_2d &coords);
-
 
 };
 
@@ -75,7 +47,23 @@ public:
 
 template<typename T>
 class line_2d {
-    //users changes of types
+public:
+    enum Relationship_Type {
+        Without_Crossing = 0,
+        Positive,
+        Negative,
+        Crossing,
+        One_Point,
+
+        //different type of coincedence of two line segments
+                Full_Inclusion_In_Spliting_Line,
+        Full_Inclusion_Of_Spliting_Line,
+        Spliting_Line_Above,
+        Spliting_Line_Below,
+        Full_Coincidence
+
+    };
+    //--------------------------------------------------------------------------//
     using coord_type = T;
     using coord_ptr = T *;
     using point_type = point_2d<T>;
@@ -87,13 +75,13 @@ class line_2d {
     using line_reference = line_2d<T> &;
     //----------------------------------------------------------------------//
 private:
-    void Type_Coincedence(const_line_reference line2D, int *type_intersect) const;
+    void Type_Coincedence(const_line_reference line2D, int &type_intersect) const;
 
-    void Coincedence_In_Vertical_Case(const_line_reference line2D, int *type_intersect) const;
+    void Coincedence_In_Vertical_Case(const_line_reference line2D, int &type_intersect) const;
 
-    point_ptr Pos_Neg_Area(const_line_reference line2D, int *type_intersect) const;
+    point_ptr Pos_Neg_Area(const_line_reference line2D, int &type_intersect) const;
 
-    point_ptr Type_Area_No_Intersection(const_line_reference line2D, int *type_intersect) const;
+    point_ptr Type_Area_No_Intersection(const_line_reference line2D, int &type_intersect) const;
 
 /*I've decided to make these fields public to have free access to them in different places*
  * Because i'm not going to think a lot about security in this program and i don't want to write getters and setters for e
@@ -133,24 +121,25 @@ public:
 
     bool operator==(const_line_reference line2D) const;
 
-//    bool operator()(const_line_reference line1, const_line_reference line2)const;
     void check_order();
 
     void swap_order();
 
     //this argument will point to the spliting line so its coordinates will be the pt1, pt2
-    point_ptr lines_intersection(const_line_reference line2D, int *type_intersect) const;
-
-    //this method returns the vector product on given coordinates of vectors
-    coord_type Kross(const_point_reference pt1, const_point_reference pt2) const;
-
-    //this method returns the scalar product on given coordinates of vectors
-    coord_type Dot(const_point_reference pt1, const_point_reference pt2) const;
+    point_ptr lines_intersection(const_line_reference line2D, int &type_intersect) const;
 
     bool Is_Point_On_The_Line(const_point_type pt) const;
 
 
 };
 
+    template<typename T>
+    inline T Kross(const point_2d<T> &vec1, const point_2d<T> &vec2);
+
+    template<typename T>
+    inline T Dot(const point_2d<T> &vec1, const point_2d<T> &vec2);
+
+
+}
 
 #endif //COUNT_INTERSECTION_AREA_OF_TRIANGLE_LINE_2D_H

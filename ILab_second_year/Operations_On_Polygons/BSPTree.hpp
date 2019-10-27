@@ -23,7 +23,11 @@ BSPTree_Node<T>::BSPTree_Node(node_ptr pos, node_ptr neg, const_line_reference l
 
 /*This constructor must fill the list of edges with right directed edges
  * such that each line's pt1 point has coordinate of y less than pt2 point
- * */
+ *
+ *
+ * Some notes about this constructor :
+ * 1) It takes the set of point_2d points which represent the sequence of vertexes of polygon
+ * 2)  */
 template<typename T>
 BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
     int number_coord = coords.size();
@@ -82,10 +86,10 @@ typename BSPTree<T>::node_ptr BSPTree<T>::Construct_Tree(iterator it, int pos_di
     point_ptr common_point;
 
     for (current_edge; current_edge != last_edge;) {
-        common_point = it_begin->lines_intersection(*current_edge, &type_intersection);
+        common_point = it_begin->lines_intersection(*current_edge, type_intersection);
 
-        //if type_intersection == intersect(Negative) then we mustn't do anything with the line
-        if (type_intersection == intersect(Positive)) {
+        //if type_intersection == Negative then we mustn't do anything with the line
+        if (type_intersection == line_2d<T>::Positive) {
             //due to i'm going to erase the element by iterator current_edge, so i must save its copy to iterate further
 
             edges.insert(it_begin, *current_edge);
@@ -96,17 +100,19 @@ typename BSPTree<T>::node_ptr BSPTree<T>::Construct_Tree(iterator it, int pos_di
             --neg_dist;
             delete common_point;
             continue;
-        } else if (type_intersection == intersect(Crossing) ||
-                   (type_intersection == intersect(Without_Crossing) && common_point)) {
+        } else if (type_intersection == line_2d<coord_type>::Crossing ||
+                   (type_intersection == line_2d<coord_type>::Without_Crossing && common_point)) {
             /*but the most important case in this condition when the second condition is true
              * and the first condition is very specifical it can arise when we deal
              * with very difficult polygon*/
             line_type first_part = line_type(current_edge->pt1_, *common_point);
-            it_begin->lines_intersection(first_part, &type_intersection);
-            if (type_intersection == intersect(Positive)) {
+            it_begin->lines_intersection(first_part, type_intersection);
+
+            if (type_intersection == line_2d<coord_type>::Positive) {
+
                 edges.insert(it_begin, first_part);
                 current_edge->pt1_ = *common_point;
-            } else if (type_intersection == intersect(Negative)) {
+            } else if (type_intersection == line_2d<coord_type>::Negative) {
                 edges.insert(it_begin, line_type(*common_point, current_edge->pt2_));
                 current_edge->pt2_ = *common_point;
 
@@ -142,9 +148,6 @@ void BSPTree<T>::Make_Tree() {
     //______________Creating the bsp tree for polygon___________________//
     root__ = Construct_Tree(edges.begin(), 0, edges.size() - 1, false);
 
-
-    //__________________Clean Tree_____________________________________//
-    //Clear_Bsp_Tree(root__);
 }
 
 template<typename T>
@@ -172,37 +175,40 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
         return;
 
     int type_intersection = 0;
-    point_ptr common_point = (polygon_for_intersect->get_edge()).lines_intersection(line2D, &type_intersection);
+    point_ptr common_point = (polygon_for_intersect->get_edge()).lines_intersection(line2D, type_intersection);
 
     switch (type_intersection) {
-        case intersect(Positive) : {
+
+        case line_2d<coord_type>::Positive : {
             Partitioning_Line_Segment(inside_edges, line2D, polygon_for_intersect->get_pos());
             break;
         }
 
 
-        case intersect(Spliting_Line_Above) :
-        case intersect(Spliting_Line_Below) :
-        case intersect(Full_Inclusion_Of_Spliting_Line) : {
+        case line_2d<coord_type>::Spliting_Line_Above :
+        case line_2d<coord_type>::Spliting_Line_Below :
+        case line_2d<coord_type>::Full_Inclusion_Of_Spliting_Line: {
             return;
         }
 
 
-        case intersect(Negative) : {
+        case line_2d<coord_type>::Negative : {
             Partitioning_Line_Segment(inside_edges, line2D, polygon_for_intersect->get_neg());
             break;
         }
 
-        case intersect(One_Point):
-        case intersect(Crossing) : {
+        case line_2d<coord_type>::One_Point :
+        case line_2d<coord_type>::Crossing : {
 
             line_type first_part(line2D.pt1_, *common_point, line2D.is_counterclockwise);
             line_type second_part(*common_point, line2D.pt2_, line2D.is_counterclockwise);
 
-            if (first_part.Dot(line2D.pt1_, (polygon_for_intersect->get_edge()).normal) -
+            if (line_tools::Dot(line2D.pt1_, (polygon_for_intersect->get_edge()).normal) -
                 polygon_for_intersect->get_edge().c > 0) {
+
                 Partitioning_Line_Segment(inside_edges, first_part, polygon_for_intersect->get_pos());
                 Partitioning_Line_Segment(inside_edges, second_part, polygon_for_intersect->get_neg());
+
             } else {
                 Partitioning_Line_Segment(inside_edges, second_part, polygon_for_intersect->get_pos());
                 Partitioning_Line_Segment(inside_edges, first_part, polygon_for_intersect->get_neg());
@@ -220,7 +226,7 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
             break;
         }
 
-        case intersect(Full_Coincidence): {
+        case line_2d<coord_type>::Full_Coincidence : {
             /*we must to block pushing edge of triangle in case of full coincidence when processing with
              * opposite order of triangles has already pushed this edge
              * and as usual a lot depend on the orientation of the line segment
@@ -238,13 +244,13 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
             return;
         }
 
-        case intersect(Full_Inclusion_In_Spliting_Line) : {
+        case line_2d<coord_type>::Full_Inclusion_In_Spliting_Line : {
             Right_Insert(inside_edges, line2D);
             delete common_point;
             return;
         }
 
-        case intersect(Without_Crossing) : {
+        case line_2d<coord_type>::Without_Crossing : {
             break;
         }
 
@@ -283,24 +289,24 @@ typename BSPTree<T>::node_ptr BSPTree<T>::get_root() const {
 template<typename T>
 bool BSPTree<T>::Check_Position_Last_Line(std::list <line_type> &inside_edges, const_line_reference line2D,
                                           node_ptr last_edge) {
-    int type_pos = pos(Somewhere);
+    int type_pos = Somewhere;
 
-    Check_Inside_Outside_Last_Edge(line2D.pt1_, &type_pos, last_edge);
+    Check_Inside_Outside_Last_Edge(line2D.pt1_, type_pos, last_edge);
 
-    if (type_pos == pos(Outside)) {
+    if (type_pos == Outside) {
         return false;
     }
 
-    if (type_pos == pos(Inside)) {
+    if (type_pos == Inside) {
         Right_Insert(inside_edges, line2D);
 
         return true;
     }
-    if (type_pos == pos(On)) {
-        Check_Inside_Outside_Last_Edge(line2D.pt2_, &type_pos, last_edge);
-        if (type_pos == pos(Outside))
+    if (type_pos == On) {
+        Check_Inside_Outside_Last_Edge(line2D.pt2_, type_pos, last_edge);
+        if (type_pos == Outside)
             return false;
-        if (type_pos == pos(On) || type_pos == pos(Inside)) {
+        if (type_pos == On || type_pos == Inside) {
 
             Right_Insert(inside_edges, line2D);
 
@@ -326,19 +332,19 @@ void BSPTree<T>::Polygon_Polygon_Intersection(std::list <line_type> &common_line
 
 template<typename T>
 void BSPTree<T>::Point_Position_In_Polygon(const_point_reference point, node_ptr edge,
-                                           int *type_pos) const {
+                                           int &type_pos) const {
     if (!edge) {
-        *type_pos = pos(Outside);
+        type_pos = Outside;
         return;
     }
 
-    coord_type check_position = (edge->get_edge()).Dot(point, (edge->get_edge()).normal) - (edge->get_edge()).c;
+    coord_type check_position = Dot(point, (edge->get_edge()).normal) - (edge->get_edge()).c;
 
     //using the fact of initial counterclockwise direction of points
     if (!edge->get_neg() && !edge->get_pos()) {
         //the case when the point lie on the last line segment of given polygon
         if (check_position == 0) {
-            *type_pos = pos(On);
+            type_pos = On;
             return;
         }
         Check_Inside_Outside_Last_Edge(point, type_pos, edge);
@@ -356,23 +362,23 @@ void BSPTree<T>::Point_Position_In_Polygon(const_point_reference point, node_ptr
 
         if (edge->get_edge().pt1_.x_ < edge->get_edge().pt2_.x_) {
             if (point.x_ >= edge->get_edge().pt1_.x_ && point.x_ <= edge->get_edge().pt2_.x_) {
-                *type_pos = pos(On);
+                type_pos = On;
                 return;
             } else {
-                *type_pos = pos(Outside);
+                type_pos = Outside;
                 return;
             }
         } else {
             if (point.x_ >= edge->get_edge().pt2_.x_ && point.x_ <= edge->get_edge().pt1_.x_) {
-                *type_pos = pos(On);
+                type_pos = On;
                 return;
             } else {
-                *type_pos = pos(Outside);
+                type_pos = Outside;
                 return;
             }
         }
     } else {
-        *type_pos = pos(Outside);
+        type_pos = Outside;
         return;
     }
 
@@ -380,26 +386,26 @@ void BSPTree<T>::Point_Position_In_Polygon(const_point_reference point, node_ptr
 }
 
 template<typename T>
-void BSPTree<T>::Check_Inside_Outside_Last_Edge(const_point_reference point, int *type_pos, node_ptr last_node) const {
+void BSPTree<T>::Check_Inside_Outside_Last_Edge(const_point_reference point, int &type_pos, node_ptr last_node) const {
     //use the fact that the initial direction of edges is counterclockwise
 
     if (last_node->get_edge().is_counterclockwise) {
 
-        coord_type value = last_node->get_edge().Dot(point, last_node->get_edge().normal) - last_node->get_edge().c;
+        coord_type value = Dot(point, last_node->get_edge().normal) - last_node->get_edge().c;
         if (value < 0)
-            *type_pos = pos(Inside);
+            type_pos = Inside;
         else if (value > 0)
-            *type_pos = pos(Outside);
-        else *type_pos = pos(On);
+            type_pos = Outside;
+        else type_pos = On;
     } else {
         point_type normal_initial_dir(-(last_node->get_edge().normal.x_), -(last_node->get_edge().normal.y_));
-        coord_type c_initial_value = last_node->get_edge().Dot(normal_initial_dir, last_node->get_edge().pt2_);
-        coord_type value = last_node->get_edge().Dot(point, normal_initial_dir) - c_initial_value;
+        coord_type c_initial_value = Dot(normal_initial_dir, last_node->get_edge().pt2_);
+        coord_type value = Dot(point, normal_initial_dir) - c_initial_value;
         if (value < 0)
-            *type_pos = pos(Inside);
+            type_pos = Inside;
         else if (value > 0)
-            *type_pos = pos(Outside);
-        else *type_pos = pos(On);
+            type_pos = Outside;
+        else type_pos = On;
     }
 
     //NO OTHER CANDIDATES   ;) ;) ;)

@@ -14,16 +14,27 @@
 #include <string>
 
 
-#define TRIANGLE_TESTS "data/triangle.txt"
-#define TRIANGLE_RESULTS "res/.txt"
+#define TRIANGLE_TESTS "Tests/data/triangle.txt"
+#define TRIANGLE_RESULTS "Tests/res/.txt"
 
-#define POS_RES_NUMBER 4
-#define POS_NUMBER 13
+#define POS_RES_NUMBER 10
+#define POS_NUMBER 19
 
 
 #define WITHOUT_INTERSECTON 0
 
+
 namespace polygon {
+
+    /*this is a template friend function of class Work_w_Polygon
+     * I'm going to use it when i need to have the input from standart input file stream
+     * : FILENO_STDIN, besides this operator will fill in two */
+    template<typename T>
+    class Work_w_Polygon;
+
+    template<typename T>
+    std::istream &operator>>(std::istream &in, Work_w_Polygon<T> &object);
+
     template<typename T>
     class Work_w_Polygon {
         using coord_type = T;
@@ -70,6 +81,8 @@ namespace polygon {
 
 
         ~Work_w_Polygon();
+
+        friend std::istream &operator>><coord_type>(std::istream &in, Work_w_Polygon<T> &object);
 
 
     };

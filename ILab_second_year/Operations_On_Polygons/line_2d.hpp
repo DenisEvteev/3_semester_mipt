@@ -4,9 +4,11 @@
 
 #include "line_2d.h"
 
+using namespace line_tools;
 
+//---------------implementations of point_2d class methods-------------------------------------//
 template<typename T>
-point_2d<T>::point_2d(T x, T y) : x_(x), y_(y) {}
+point_2d<T>::point_2d(coord_type x, coord_type y) : x_(x), y_(y) {}
 
 template<typename T>
 bool point_2d<T>::operator==(const_point_reference point) const {
@@ -25,20 +27,6 @@ bool point_2d<T>::operator==(const_point_reference point) const {
 }
 
 template<typename T>
-bool line_2d<T>::operator==(const_line_reference line2D) const {
-    if (line2D.pt1_ == pt1_ && line2D.pt2_ == pt2_)
-        return true;
-
-    return false;
-}
-
-template<typename T>
-point_2d<T>::point_2d(const point_2d &point) {
-    x_ = point.x_;
-    y_ = point.y_;
-}
-
-template<typename T>
 typename point_2d<T>::point_reference point_2d<T>::operator=(const_point_reference point) &{
     if (this == &point)
         return *this;
@@ -48,24 +36,46 @@ typename point_2d<T>::point_reference point_2d<T>::operator=(const_point_referen
     return *this;
 
 }
+//-----------------------------------------------------------------------------------------------//
 
+
+//_________________HELPER FUNCTIONS FOR CLASS REPRESENTING LINE IN 2D____________________________//
+template<typename T>
+inline T line_tools::Kross(const point_2d<T> &vec1, const point_2d<T> &vec2) {
+    return (vec1.x_ * vec2.y_) - (vec1.y_ * vec2.x_);
+}
+
+template<typename T>
+inline T line_tools::Dot(const point_2d<T> &vec1, const point_2d<T> &vec2) {
+    return vec1.x_ * vec2.x_ + vec1.y_ * vec2.y_;
+}
+//-------------------------------------------------------------------------------------------------//
+
+//_____________________Implementations of line_2d class methods_____________________________________//
+template<typename T>
+bool line_2d<T>::operator==(const_line_reference line2D) const {
+    if (line2D.pt1_ == pt1_ && line2D.pt2_ == pt2_)
+        return true;
+
+    return false;
+}
 
 template<typename T>
 typename line_2d<T>::point_ptr
-line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int *type_intersect) const {
+line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int &type_intersect) const {
     if (Dot(normal, line2D.pt1_) - c > 0 && Dot(normal, line2D.pt2_) - c > 0) {
-        *type_intersect = intersect(Positive);
+        type_intersect = Positive;
         return nullptr;
     } else if (Dot(normal, line2D.pt1_) - c < 0 && Dot(normal, line2D.pt2_) - c < 0) {
-        *type_intersect = intersect(Negative);
+        type_intersect = Negative;
         return nullptr;
     } else if ((Dot(normal, line2D.pt1_) - c == 0 && Dot(normal, line2D.pt2_) - c > 0) ||
                (Dot(normal, line2D.pt2_) - c == 0 && Dot(normal, line2D.pt1_) - c > 0)) {
-        *type_intersect = intersect(Positive);
+        type_intersect = Positive;
         return nullptr;
     } else if ((Dot(normal, line2D.pt1_) - c == 0 && Dot(normal, line2D.pt2_) - c < 0) ||
                (Dot(normal, line2D.pt2_) - c == 0 && Dot(normal, line2D.pt1_) - c < 0)) {
-        *type_intersect = intersect(Negative);
+        type_intersect = Negative;
         return nullptr;
     } else {
         coord_type y_coord = (line2D.c * normal.x_ - c * line2D.normal.x_) /
@@ -74,31 +84,34 @@ line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int *type_int
         coord_type x_coord = c / normal.x_ - (normal.y_ / normal.x_) * y_coord;
 
         auto point_in_intersection_lines = new point_type(x_coord, y_coord);
-        *type_intersect = intersect(Without_Crossing);
+        type_intersect = Without_Crossing;
         return point_in_intersection_lines;
     }
 }
 
 template<typename T>
-typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_reference line2D, int *type_intersect) const {
+typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_reference line2D, int &type_intersect) const {
     //First line is pt1 and pt2
 
-    coord_type vector_left = Kross({line2D.pt1_.x_ - pt1_.x_, line2D.pt1_.y_ - pt1_.y_},
-                                   {pt2_.x_ - pt1_.x_, pt2_.y_ - pt1_.y_});
+    coord_type vector_left = Kross(point_type(line2D.pt1_.x_ - pt1_.x_, line2D.pt1_.y_ - pt1_.y_),
+                                   point_type(pt2_.x_ - pt1_.x_, pt2_.y_ - pt1_.y_));
 
-    coord_type vector_right = Kross({line2D.pt2_.x_ - pt1_.x_, line2D.pt2_.y_ - pt1_.y_},
-                                    {pt2_.x_ - pt1_.x_, pt2_.y_ - pt1_.y_});
+    coord_type vector_right = Kross(point_type(line2D.pt2_.x_ - pt1_.x_, line2D.pt2_.y_ - pt1_.y_),
+                                    point_type(pt2_.x_ - pt1_.x_, pt2_.y_ - pt1_.y_));
+
     // one of this value will be 0 it means that points lie exactly on the line
     coord_type vector_pr_first = vector_left * vector_right;
     if (vector_pr_first > 0) {
         return Type_Area_No_Intersection(line2D, type_intersect);
     }
 
-    coord_type another_vector_left = Kross({pt1_.x_ - line2D.pt2_.x_, pt1_.y_ - line2D.pt2_.y_},
-                                           {line2D.pt1_.x_ - line2D.pt2_.x_, line2D.pt1_.y_ - line2D.pt2_.y_});
+    coord_type another_vector_left = Kross(point_type(pt1_.x_ - line2D.pt2_.x_, pt1_.y_ - line2D.pt2_.y_),
+                                           point_type(line2D.pt1_.x_ - line2D.pt2_.x_,
+                                                      line2D.pt1_.y_ - line2D.pt2_.y_));
 
-    coord_type another_vector_right = Kross({pt2_.x_ - line2D.pt2_.x_, pt2_.y_ - line2D.pt2_.y_},
-                                            {line2D.pt1_.x_ - line2D.pt2_.x_, line2D.pt1_.y_ - line2D.pt2_.y_});
+    coord_type another_vector_right = Kross(point_type(pt2_.x_ - line2D.pt2_.x_, pt2_.y_ - line2D.pt2_.y_),
+                                            point_type(line2D.pt1_.x_ - line2D.pt2_.x_,
+                                                       line2D.pt1_.y_ - line2D.pt2_.y_));
 
     coord_type vector_pr_second = another_vector_left * another_vector_right;
     if (vector_pr_second > 0) {
@@ -131,7 +144,7 @@ typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_referen
             common_point = new point_type(pt1_);
         } else
             common_point = new point_type(pt2_);
-        *type_intersect = intersect(One_Point);
+        type_intersect = One_Point;
         return common_point;
     }
 
@@ -148,35 +161,23 @@ typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_referen
     coord_type x_coord = x_numerator / denominator + line2D.pt2_.x_;
     coord_type y_coord = y_numerator / denominator + line2D.pt2_.y_;
 
-    if (x_coord <= NUL_LIMIT)
+    if (x_coord > 0 && x_coord <= NUL_LIMIT)
         x_coord = 0.0;
-    if (y_coord <= NUL_LIMIT)
+    if (y_coord > 0 && y_coord <= NUL_LIMIT)
         y_coord = 0.0;
 
-    auto common_point_ptr = new point_type({x_coord, y_coord});
-    *type_intersect = intersect(Crossing);
+    auto common_point_ptr = new point_type(x_coord, y_coord);
+    type_intersect = Crossing;
 
     return common_point_ptr;
 }
 
-
 template<typename T>
-typename line_2d<T>::coord_type line_2d<T>::Dot(const_point_reference pt1, const_point_reference pt2) const {
-    return pt1.x_ * pt2.x_ + pt1.y_ * pt2.y_;
-}
-
-template<typename T>
-typename line_2d<T>::coord_type line_2d<T>::Kross(const_point_reference pt1, const_point_reference pt2) const {
-    return (pt1.x_ * pt2.y_) - (pt1.y_ * pt2.x_);
-}
-
-
-template<typename T>
-void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_intersect) const {
+void line_2d<T>::Type_Coincedence(const_line_reference line2D, int &type_intersect) const {
 
     //case of full coincidence of two line segments
     if (line2D.pt2_ == pt2_ && line2D.pt1_ == pt1_) {
-        *type_intersect = intersect(Full_Coincidence);
+        type_intersect = Full_Coincidence;
         return;
 
     }
@@ -186,7 +187,7 @@ void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_interse
         return;
     }
     if (line2D.pt1_ == pt1_ && line2D.pt2_ == pt2_) {
-        *type_intersect = intersect(Full_Inclusion_Of_Spliting_Line);
+        type_intersect = Full_Inclusion_Of_Spliting_Line;
         return;
     }
 
@@ -213,7 +214,7 @@ void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_interse
     //case when line2D fully within the spliting line
     if (line2D.pt1_.x_ >= low_limit && line2D.pt1_.x_ <= high_limit &&
         line2D.pt2_.x_ >= low_limit && line2D.pt2_.x_ <= high_limit) {
-        *type_intersect = intersect(Full_Inclusion_In_Spliting_Line);
+        type_intersect = Full_Inclusion_In_Spliting_Line;
         return;
     }
 
@@ -221,7 +222,7 @@ void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_interse
 
     if (pt1_.x_ >= low_limit_line2D && pt2_.x_ <= high_limit_line2D &&
         pt1_.x_ <= high_limit_line2D && pt2_.x_ >= low_limit_line2D) {
-        *type_intersect = intersect(Full_Inclusion_Of_Spliting_Line);
+        type_intersect = Full_Inclusion_Of_Spliting_Line;
         return;
     }
 
@@ -230,7 +231,7 @@ void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_interse
          !direction) ||
         (low_limit_line2D <= low_limit && low_limit <= high_limit_line2D && high_limit_line2D < high_limit &&
          direction)) {
-        *type_intersect = intersect(Spliting_Line_Above);
+        type_intersect = Spliting_Line_Above;
         return;
     }
 
@@ -239,41 +240,41 @@ void line_2d<T>::Type_Coincedence(const_line_reference line2D, int *type_interse
          !direction) ||
         (low_limit <= low_limit_line2D && low_limit_line2D <= high_limit && high_limit < high_limit_line2D &&
          direction)) {
-        *type_intersect = intersect(Spliting_Line_Below);
+        type_intersect = Spliting_Line_Below;
         return;
     } else {
-        *type_intersect = intersect(Without_Crossing);
+        type_intersect = Without_Crossing;
         return;
     }
 }
 
 template<typename T>
-void line_2d<T>::Coincedence_In_Vertical_Case(const_line_reference line2D, int *type_intersect) const {
+void line_2d<T>::Coincedence_In_Vertical_Case(const_line_reference line2D, int &type_intersect) const {
     if (line2D.pt2_ == pt2_ && line2D.pt1_ == pt1_) {
-        *type_intersect = intersect(Full_Inclusion_Of_Spliting_Line);
+        type_intersect = Full_Inclusion_Of_Spliting_Line;
         return;
     }
 
     if (line2D.pt1_.y_ >= pt1_.y_ && line2D.pt2_.y_ >= pt1_.y_ &&
         line2D.pt1_.y_ <= pt2_.y_ && line2D.pt2_.y_ <= pt2_.y_) {
-        *type_intersect = intersect(Full_Inclusion_In_Spliting_Line);
+        type_intersect = Full_Inclusion_In_Spliting_Line;
         return;
     }
     if (pt1_.y_ >= line2D.pt1_.y_ && pt1_.y_ >= line2D.pt2_.y_ &&
         pt2_.y_ <= line2D.pt1_.y_ && pt2_.y_ <= line2D.pt2_.y_) {
-        *type_intersect = intersect(Full_Inclusion_Of_Spliting_Line);
+        type_intersect = Full_Inclusion_Of_Spliting_Line;
         return;
     }
 
     if (line2D.pt2_.y_ > pt2_.y_ && line2D.pt1_.y_ <= pt2_.y_) {
-        *type_intersect = intersect(Spliting_Line_Below);
+        type_intersect = Spliting_Line_Below;
         return;
     }
 
     if (pt2_.y_ > line2D.pt2_.y_ && pt1_.y_ <= line2D.pt2_.y_) {
-        *type_intersect = intersect(Spliting_Line_Above);
+        type_intersect = Spliting_Line_Above;
     } else {
-        *type_intersect = intersect(Without_Crossing);
+        type_intersect = Without_Crossing;
         return;
     }
 
@@ -331,20 +332,20 @@ bool line_2d<T>::Is_Point_On_The_Line(line_2d::const_point_type pt) const {
 }
 
 template<typename T>
-typename line_2d<T>::point_ptr line_2d<T>::Pos_Neg_Area(const_line_reference line2D, int *type_intersect) const {
+typename line_2d<T>::point_ptr line_2d<T>::Pos_Neg_Area(const_line_reference line2D, int &type_intersect) const {
     point_ptr common_point;
     if (Is_Point_On_The_Line(line2D.pt1_)) {
         common_point = new point_type(line2D.pt1_);
         if ((Dot(line2D.pt2_, normal) - c) > 0)
-            *type_intersect = intersect(Positive);
+            type_intersect = Positive;
         else
-            *type_intersect = intersect(Negative);
+            type_intersect = Negative;
     } else if (Is_Point_On_The_Line(line2D.pt2_)) {
         common_point = new point_type(line2D.pt2_);
         if ((Dot(line2D.pt1_, normal) - c) > 0)
-            *type_intersect = intersect(Positive);
+            type_intersect = Positive;
         else
-            *type_intersect = intersect(Negative);
+            type_intersect = Negative;
 
     } else
         common_point = nullptr;
