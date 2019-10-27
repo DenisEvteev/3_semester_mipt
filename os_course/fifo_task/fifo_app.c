@@ -4,7 +4,6 @@
 
 #define _GNU_SOURCE
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -70,7 +69,7 @@ int main(int argc, char *argv[]) {
 void Writer_Processes(const char *path_to_data) {
     assert(path_to_data);
 
-    int fd_pivotal_fifo;
+    int fd_pivotal_fifo = 0;
     pid_t pid = getpid();
     char buf[PIPE_BUF] = {};
 
@@ -91,7 +90,7 @@ void Writer_Processes(const char *path_to_data) {
     int private_fifo_read_end = open(CLIENT_FIFO_PATH, O_RDONLY | O_NONBLOCK);
     int private_fifo_write_end = open(CLIENT_FIFO_PATH, O_WRONLY);
 
-    if (private_fifo_write_end == -1) {
+    if (private_fifo_write_end == -1 || private_fifo_read_end == -1) {
         ERROR_MESSAGE("error in opening private fifo");
     }
 
