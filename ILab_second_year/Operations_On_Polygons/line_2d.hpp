@@ -13,8 +13,9 @@ point_2d<T>::point_2d(coord_type x, coord_type y) : x_(x), y_(y) {}
 template<typename T>
 bool point_2d<T>::operator==(const_point_reference point) const {
 
-    if (std::fabs(point.x_ - x_) <= std::numeric_limits<coord_type>::epsilon() * std::fabs(point.x_ + x_) &&
-        std::fabs(point.y_ - y_) <= std::numeric_limits<coord_type>::epsilon() * std::fabs(point.y_ + y_))
+    if (std::fabs(point.x_ - x_) <=
+        std::numeric_limits<coord_type>::epsilon() * std::fabs(point.x_ + x_) * CORRECTION &&
+        std::fabs(point.y_ - y_) <= std::numeric_limits<coord_type>::epsilon() * std::fabs(point.y_ + y_) * CORRECTION)
         return true;
 
     else if (std::fabs(point.x_ - x_) < std::numeric_limits<coord_type>::min() &&
@@ -49,6 +50,12 @@ template<typename T>
 inline T line_tools::Dot(const point_2d<T> &vec1, const point_2d<T> &vec2) {
     return vec1.x_ * vec2.x_ + vec1.y_ * vec2.y_;
 }
+
+void line_tools::Error_Message() {
+    std::cout << "Error in the " << __LINE__ << " line" << std::endl;
+    std::cout << "The file name is : " << __FILE__ << std::endl;
+    exit(EXIT_FAILURE);
+}
 //-------------------------------------------------------------------------------------------------//
 
 //_____________________Implementations of line_2d class methods_____________________________________//
@@ -78,13 +85,34 @@ line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int &type_int
         type_intersect = Negative;
         return nullptr;
     } else {
-        coord_type y_coord = (line2D.c * normal.x_ - c * line2D.normal.x_) /
-                             (line2D.normal.y_ * normal.x_ - normal.y_ * line2D.normal.x_);
+
+        //the critical section dividing by zero can appear, so i must think about another better desicion
+
+
+        if (normal.x_ == 0) {
+            /*the case when the normal is perpendicular to x axis, so we know exactly y_coord of the
+            * common_point in intersection of these two line segments*/
+            coord_type y_coord = pt1_.y_;
+            if (line2D.normal.x_ == 0)
+                Error_Message();
+            coord_type x_coord = (line2D.c - y_coord * line2D.normal.y_) / line2D.normal.x_;
+            auto point_in_intersection_lines = new point_type(x_coord, y_coord);
+            type_intersect = Crossing_Without_Intersection;
+            return point_in_intersection_lines;
+
+        }
+
+        coord_type check_error = line2D.normal.y_ * normal.x_ - normal.y_ * line2D.normal.x_;
+        if (check_error == 0)
+            Error_Message();
+
+        coord_type y_coord = (line2D.c * normal.x_ - c * line2D.normal.x_) / check_error;
 
         coord_type x_coord = c / normal.x_ - (normal.y_ / normal.x_) * y_coord;
 
+
         auto point_in_intersection_lines = new point_type(x_coord, y_coord);
-        type_intersect = Without_Crossing;
+        type_intersect = Crossing_Without_Intersection;
         return point_in_intersection_lines;
     }
 }
@@ -158,12 +186,15 @@ typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_referen
     coord_type y_numerator = line2D.pt1_.y_ - line2D.pt2_.y_;
 
 
+    if (denominator == 0)
+        Error_Message();
+
     coord_type x_coord = x_numerator / denominator + line2D.pt2_.x_;
     coord_type y_coord = y_numerator / denominator + line2D.pt2_.y_;
 
-    if (x_coord > 0 && x_coord <= NUL_LIMIT)
+    if ((x_coord > 0 && x_coord <= NUL_LIMIT) || (x_coord < 0 && x_coord >= -NUL_LIMIT))
         x_coord = 0.0;
-    if (y_coord > 0 && y_coord <= NUL_LIMIT)
+    if ((y_coord > 0 && y_coord <= NUL_LIMIT) || (y_coord < 0 && y_coord >= -NUL_LIMIT))
         y_coord = 0.0;
 
     auto common_point_ptr = new point_type(x_coord, y_coord);

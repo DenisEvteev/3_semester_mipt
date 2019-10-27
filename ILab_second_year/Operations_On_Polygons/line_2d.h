@@ -12,6 +12,7 @@
 #include <limits>
 
 #define NUL_LIMIT 1e-4
+#define CORRECTION 100
 
 
 namespace line_tools {
@@ -60,7 +61,8 @@ public:
         Full_Inclusion_Of_Spliting_Line,
         Spliting_Line_Above,
         Spliting_Line_Below,
-        Full_Coincidence
+        Full_Coincidence,
+        Crossing_Without_Intersection
 
     };
     //--------------------------------------------------------------------------//
@@ -98,12 +100,12 @@ public:
     //the __ c __ field represents the coefficient in the vector form of the line segment like [ Dot(normal, x) = c ]; c = Dot(r_0, normal)
     coord_type c;
 
-    /*this field became necessary in my realization, because i thought a lot about how to compensate right
-     * counterclockwise direction of edges of polygons (it's very important to own such an information during
-     * dealing with polygons, for example during boolean operations on polygons
-     * So i've taken a decision to save this fact in this field and when i will need it i'll easily get the information
-     * of initial direction of the line in polygon if the [is_counterclockwise == 1] it means that this line segment has the
-     * primary counterclockwise direction in polygon otherwise his initial direction has been changed*/
+        /*this field became necessary in my realization, because i thought a lot about how to compensate right
+         * counterclockwise direction of edges of polygons (it's very important to own such an information during
+         * dealing with polygons, for example during boolean operations on polygons
+         * So i've taken a decision to save this fact in this field and when i will need it i'll easily get the information
+         * of initial direction of the line in polygon if  [is_counterclockwise == 1] it means that this line segment has the
+         * primary counterclockwise direction in polygon otherwise his initial direction has been changed*/
     bool is_counterclockwise = true;
 
 public:
@@ -138,6 +140,8 @@ public:
 
     template<typename T>
     inline T Dot(const point_2d<T> &vec1, const point_2d<T> &vec2);
+
+    void Error_Message();
 
 
 }

@@ -16,7 +16,10 @@ using namespace polygon;
 
 /*if you want to get the input data from file of my type ( the examples are represented in the catalog Tests in folder
  * data) then you must define DATA_FROM_FILE otherwise the data will be requested from standart input file stream STDOUT_FILENO*/
-#define DATA_FROM_FILE
+
+//#define DATA_FROM_FILE
+
+
 int main() {
 
     std::set_new_handler(MyNewHandler);

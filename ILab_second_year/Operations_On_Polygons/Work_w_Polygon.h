@@ -21,7 +21,14 @@
 #define POS_NUMBER 19
 
 
-#define WITHOUT_INTERSECTON 0
+
+/*this values represent the number of vertex in polygons
+ * we need in these values for determining number of iterations in the loop of parcing the string with
+ * the input data of coordinates of two polygons.
+ * Initially we work with two triangles*/
+
+#define TYPE_OF_THE_FIRST_POLYGON 3
+#define TYPE_OF_THE_SECOND_POLYGON 3
 
 
 namespace polygon {
@@ -52,6 +59,8 @@ namespace polygon {
 
         std::list <line_type> common_lines;
         std::string id_file_for_tests;
+
+        void Parse_The_String_With_Coordinates_And_Create_Two_Polygons(const std::string &convenient_work);
 
     public:
 
@@ -87,7 +96,9 @@ namespace polygon {
 
     };
 
-
+    /*helper function for exit in the case when the string of input data is very bad
+     * this function will work when the std::stof haven't managed in making the float value from substring*/
+    void Error_Exit();
 }
 
 

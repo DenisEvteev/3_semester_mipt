@@ -26,21 +26,54 @@ BSPTree_Node<T>::BSPTree_Node(node_ptr pos, node_ptr neg, const_line_reference l
  *
  *
  * Some notes about this constructor :
- * 1) It takes the set of point_2d points which represent the sequence of vertexes of polygon
- * 2)  */
+ * 1) It takes a vector of point_2d points which represent the sequence of vertexes of polygon
+ * 2) And the order of vertex can be arbitary either counterclockwise or clockwise order of vertexes can exist
+ * 3) But this constructor fills the list of edges which will be used by the function of producing the bsp tree of a polygon
+ * and the requirement for this constructor to understand whether the primary set of coordinates was counterclockwise or clockwise
+ * and if 1) counterclockwise then just change direction of the edges following the pivotal rules of my realization of bsp tree for
+ * polygons
+ * 2) Change the primary direction of edges to the counterclockwise order and only then make necessary changing for creating the
+ * list of edges with correct directions of edges*/
+
 template<typename T>
 BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
+    /*To determine whether the direction of vertex is counterclockwise or clockwise i'm going to use following algorithm :
+     * If you have only convex polygons (and all regular polygons are convex), and if your points are all
+     * organized consistently--either all counterclockwise or all clockwise--then you can determine
+     * which by just computing the (signed) area of one triangle determined
+     * by any three consecutive points. This is essentially computing the
+     * cross product of the two vectors along the two edges.*/
+    coord_type double_signed_area = 0.0;
+    int j = 0;
+    for (int i = 0; i < 3; ++i) {
+        j = (i + 1) % 3;
+        double_signed_area += (coords[i].y_ + coords[j].y_) * (coords[j].x_ - coords[i].x_);
+    }
+
+    /*Here i want to remind that is_counterclockwise order field in line_2d just say
+     * whether the line had initial counterclockwise order or it has been changed
+     * if [it is equal to true] then the primary order is counterclockwise otherwise is clockwise*/
+
+    assert(double_signed_area != 0);
+
     int number_coord = coords.size();
     line_type line_to_insert;
-    for (int i = 0; i < number_coord - 1; ++i) {
-        line_to_insert = line_type(coords[i], coords[i + 1]);
-        line_to_insert.check_order();
-        edges.push_back(line_to_insert);
-    }
-    line_to_insert = line_type(coords[number_coord - 1], coords[0]);
-    line_to_insert.check_order();
-    edges.push_back(line_to_insert);
+    if (double_signed_area > 0) {
 
+        for (int i = number_coord; i > 0; --i) {
+            j = (i - 1) % number_coord;
+            line_to_insert = line_type(coords[i % number_coord], coords[j]);
+            line_to_insert.check_order();
+            edges.push_back(line_to_insert);
+        }
+    } else {
+        for (int i = 0; i < number_coord; ++i) {
+            j = (i + 1) % number_coord;
+            line_to_insert = line_type(coords[i], coords[j]);
+            line_to_insert.check_order();
+            edges.push_back(line_to_insert);
+        }
+    }
 }
 
 
@@ -58,7 +91,7 @@ typename BSPTree<T>::node_ptr BSPTree<T>::Construct_Tree(iterator it, int pos_di
         neg_dist = pos_dist - 1;
         pos_dist = 0;
     } else {
-        if (neg_dist != edges.size() - 1) {
+        if (neg_dist != static_cast<int>(edges.size() - 1)) {
             ++it_begin;
             if (it_begin == edges.end())
                 return nullptr;
@@ -85,7 +118,7 @@ typename BSPTree<T>::node_ptr BSPTree<T>::Construct_Tree(iterator it, int pos_di
 
     point_ptr common_point;
 
-    for (current_edge; current_edge != last_edge;) {
+    for (; current_edge != last_edge;) {
         common_point = it_begin->lines_intersection(*current_edge, type_intersection);
 
         //if type_intersection == Negative then we mustn't do anything with the line
@@ -197,6 +230,7 @@ void BSPTree<T>::Partitioning_Line_Segment(std::list <line_type> &inside_edges, 
             break;
         }
 
+        case line_2d<coord_type>::Crossing_Without_Intersection :
         case line_2d<coord_type>::One_Point :
         case line_2d<coord_type>::Crossing : {
 
@@ -295,14 +329,11 @@ bool BSPTree<T>::Check_Position_Last_Line(std::list <line_type> &inside_edges, c
 
     if (type_pos == Outside) {
         return false;
-    }
-
-    if (type_pos == Inside) {
+    } else if (type_pos == Inside) {
         Right_Insert(inside_edges, line2D);
 
         return true;
-    }
-    if (type_pos == On) {
+    } else if (type_pos == On) {
         Check_Inside_Outside_Last_Edge(line2D.pt2_, type_pos, last_edge);
         if (type_pos == Outside)
             return false;
@@ -315,6 +346,9 @@ bool BSPTree<T>::Check_Position_Last_Line(std::list <line_type> &inside_edges, c
 
     }
 
+
+    //consider the default behavior returning false --- as a mark of outside position of the line2D
+    return false;
 }
 
 template<typename T>

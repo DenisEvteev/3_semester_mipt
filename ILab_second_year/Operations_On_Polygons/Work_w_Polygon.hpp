@@ -56,67 +56,102 @@ void Work_w_Polygon<T>::Polygons_From_File() {
     file_with_data.seekg(0, std::ios_base::beg);
 
     //put all the data in buf
-    char *buf = new char[size_bytes + 1]{'\0'};
-    file_with_data.read(buf, size_bytes + 1);
+    char *buf = new char[size_bytes + 1];
+    memset(buf, '\0', size_bytes + 1);
+
+    file_with_data.read(buf, size_bytes);
     std::string convenient_work(buf);
 
-    convenient_work.push_back(' ');
+    Parse_The_String_With_Coordinates_And_Create_Two_Polygons(convenient_work);
+
+    delete[] buf;
+    file_with_data.close();
+
+}
+
+/*At the moment i can parce with string which contain only : ['\n', '-', float values,  ' ', '#']
+ * If the string contain some different symbols than the behavior is undefined
+ * It the the strictest requirements to give in input the strings of the exact form !!!!!!!!!!!!!!! */
+
+template<typename T>
+void Work_w_Polygon<T>::Parse_The_String_With_Coordinates_And_Create_Two_Polygons(const std::string &convenient_work) {
     //two polygons for creating trees based on them
     std::vector<point_type> first_polygon;
     std::vector<point_type> second_polygon;
 
-    //represents the number of vector which we must fill with coordinates
-    int number_vector = 0;
-    int another_begin_set_coordinates = 0;
+    /*This const static string represent the sequence of bad symbols which
+     * can appear in the input string of data and which we want to skip during parcing*/
+    const static std::string bad_characters("#\n ");
 
     size_t ip = 0;
-    while (ip < size_bytes) {
+    while (ip < convenient_work.size()) {
 
         if (convenient_work[ip] == '#') {
             ip = convenient_work.find('\n', ip);
             ++ip;
-            //this value show us when the second set of coordinates starts and we will use it to change ip where space
-            //appears further than the end of string of the first set of coordinates
-            another_begin_set_coordinates = convenient_work.find('\n', ip);
             continue;
-        } else if (convenient_work[ip] == ' ') {
+        } else if (convenient_work[ip] == ' ' || convenient_work[ip] == '\n') {
             ++ip;
-            continue;
-        } else if (convenient_work[ip] == '\n') {
-            ++number_vector;
-            ++ip;
-            another_begin_set_coordinates = convenient_work.size() + 1;
             continue;
         }
 
-            //the case when we have the float value in string as a current position
+
         else {
-            //the space between each coordinates must be exactly only otherwise the behaviour of the program will be very bad
-            //i will probably improve this point but not now
-            size_t next_space = convenient_work.find(' ', ip);
-            coord_type x_coord = std::stof(convenient_work.substr(ip, next_space));
-            ip = next_space + 1;
-            next_space = convenient_work.find(' ', ip);
-            coord_type y_coord = std::stof(convenient_work.substr(ip, next_space));
 
-            if (next_space > another_begin_set_coordinates) {
-                ip = another_begin_set_coordinates;
-            } else {
+            try {
+                /*___________________ IF we won't be able to find the second coordinate in the _________________
+                 * string then immediate error will be ocurred */
+
+                //find the first bad character
+                size_t the_end_of_the_value = convenient_work.find_first_of(bad_characters, ip);
+                assert(the_end_of_the_value != std::string::npos);
+
+                //find the start of the second coordinate of the edge
+                size_t next_space = convenient_work.find_first_not_of(bad_characters, the_end_of_the_value + 1);
+                assert(next_space != std::string::npos);
+
+                //take the first coordinate
+                coord_type x_coord = std::stof(convenient_work.substr(ip, the_end_of_the_value));
                 ip = next_space;
-            }
+                //now i am at the next value
 
-            !number_vector ? first_polygon.push_back(point_type(x_coord, y_coord)) :
-            second_polygon.push_back(point_type(x_coord, y_coord));
+                the_end_of_the_value = convenient_work.find_first_of(bad_characters, ip);
+
+                //take the second coordinate
+                coord_type y_coord = std::stof(convenient_work.substr(ip, the_end_of_the_value));
+
+                first_polygon.size() < TYPE_OF_THE_FIRST_POLYGON ? first_polygon.push_back(point_type(x_coord, y_coord))
+                                                                 :
+                second_polygon.push_back(point_type(x_coord, y_coord));
+
+                ip = the_end_of_the_value;
+
+            } catch (const std::out_of_range &except) {
+                std::cout << except.what() << std::endl;
+                Error_Exit();
+
+            }
+            catch (const std::invalid_argument &except) {
+                std::cout << except.what() << std::endl;
+                Error_Exit();
+            }
         }
 
 
     }
 
+    assert(first_polygon.size() == TYPE_OF_THE_FIRST_POLYGON && second_polygon.size() == TYPE_OF_THE_SECOND_POLYGON);
+
     Produce_Bsp_Trees(first_polygon, second_polygon);
 
-    delete[] buf;
-    file_with_data.close();
 
+}
+
+void polygon::Error_Exit() {
+    std::cout << "The exception has appeared on the " << __LINE__ << "line" << std::endl;
+    std::cout << "The function's name is : " << __PRETTY_FUNCTION__ << std::endl;
+    std::cout << "The error in the file with name : " << __FILE__ << std::endl;
+    exit(EXIT_FAILURE);
 }
 
 //#define PRINT_RESULT_IN_FILE
@@ -150,7 +185,7 @@ typename Work_w_Polygon<T>::coord_type Work_w_Polygon<T>::Area_Trapezoids() cons
     return area;
 }
 
-#undef PRINT_RESULT_IN_FILE
+//#undef PRINT_RESULT_IN_FILE
 
 template<typename T>
 void Work_w_Polygon<T>::intersect_polygons() {
@@ -190,7 +225,7 @@ void Work_w_Polygon<T>::MakeCounterClockwiseOrder() {
             iter it_find = next_line;
             ++it_find;
 
-            for (it_find; it_find != common_lines.end();) {
+            for (; it_find != common_lines.end();) {
                 if (it_find->pt1_ == it->pt2_) {
                     it = common_lines.insert(next_line, *it_find);
                     common_lines.erase(it_find);
@@ -216,9 +251,19 @@ void Work_w_Polygon<T>::MakeCounterClockwiseOrder() {
     }
 }
 
+/*this method suppose that the user will give twelve float values to create two triangles for
+ * finding their intersection area
+ * And if the number of coordinates is bad then this function will return an error message
+ * */
+
 template<typename T>
 std::istream &polygon::operator>>(std::istream &in, Work_w_Polygon<T> &object) {
-    //here we will read the data from input file
+    std::string string_with_input_data_coordinates;
+    //request for data from stdin
+    std::getline(std::cin, string_with_input_data_coordinates);
+
+    //this call will create two bsp trees for polygons
+    object.Parse_The_String_With_Coordinates_And_Create_Two_Polygons(string_with_input_data_coordinates);
     return in;
 
 }
