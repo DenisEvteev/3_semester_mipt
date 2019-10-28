@@ -63,17 +63,21 @@ BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
         for (int i = number_coord; i > 0; --i) {
             j = (i - 1) % number_coord;
             line_to_insert = line_type(coords[i % number_coord], coords[j]);
-            line_to_insert.check_order();
-            edges.push_back(line_to_insert);
+            Insert_Edge(line_to_insert);
         }
     } else {
         for (int i = 0; i < number_coord; ++i) {
             j = (i + 1) % number_coord;
             line_to_insert = line_type(coords[i], coords[j]);
-            line_to_insert.check_order();
-            edges.push_back(line_to_insert);
+            Insert_Edge(line_to_insert);
         }
     }
+}
+
+template<typename T>
+void BSPTree<T>::Insert_Edge(line_reference line2D) {
+    line2D.check_order();
+    edges.push_back(line2D);
 }
 
 

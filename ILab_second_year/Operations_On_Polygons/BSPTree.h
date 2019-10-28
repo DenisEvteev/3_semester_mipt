@@ -46,6 +46,7 @@ namespace bsp {
     class BSPTree {
         using line_type = line_2d<T>;
         using const_line_reference = const line_2d<T> &;
+        using line_reference = line_2d<T> &;
         using coord_type = T;
         using node_ptr = BSPTree_Node<coord_type> *;
         using node_type = BSPTree_Node<coord_type>;
@@ -118,6 +119,8 @@ namespace bsp {
         node_ptr Construct_Tree(iterator it, int pos_dist, int neg_dist, bool direction);
 
         void Right_Insert(std::list<line_type> &inside_edges, const_line_reference line2D);
+
+        void Insert_Edge(line_reference line2D);
 
 
     };
