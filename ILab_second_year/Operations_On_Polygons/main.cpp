@@ -22,6 +22,8 @@ using namespace polygon;
 
 int main() {
 
+    /*I've changed the pointer to the function which will be called in case
+     * when the operating system cannot manage with allocating more memory for this process*/
     std::set_new_handler(MyNewHandler);
 
     Work_w_Polygon<float> triangle_intersection;

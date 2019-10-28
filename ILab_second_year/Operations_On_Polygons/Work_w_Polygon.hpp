@@ -12,24 +12,52 @@ Work_w_Polygon<T>::Work_w_Polygon(vector_coords first_polygon, vector_coords sec
     Produce_Bsp_Trees(first_polygon, second_polygon);
 }
 
+//impementation of copy constructor and assignment operator
+template<typename T>
+Work_w_Polygon<T>::Work_w_Polygon(const_polyg_reference copy) {
+    common_lines = copy.common_lines;
+    id_file_for_tests = copy.id_file_for_tests;
+    polygon_1 = new bsp::BSPTree<coord_type>(*copy.polygon_1);
+    polygon_2 = new bsp::BSPTree<coord_type>(*copy.polygon_2);
+}
+
+
+template<typename T>
+typename Work_w_Polygon<T>::polyg_reference Work_w_Polygon<T>::operator=(const_polyg_reference copy) {
+    if (this == &copy)
+        return *this;
+    common_lines = copy.common_lines;
+    id_file_for_tests = copy.id_file_for_tests;
+
+    /*here the destructors both of polygon_1 and polygon_2 will work and
+     * the allocated memory will be freed in a exactly right way
+     **/
+    delete polygon_1;
+    delete polygon_2;
+
+    polygon_1 = new bsp::BSPTree<coord_type>(*copy.polygon_1);
+    polygon_2 = new bsp::BSPTree<coord_type>(*copy.polygon_2);
+
+    return *this;
+}
+//-----------------------------------------------------------------------------------------------------//
+
+
 template<typename T>
 Work_w_Polygon<T>::~Work_w_Polygon() {
 
-    polygon_1->Clear_Bsp_Tree(polygon_1->get_root());
-    polygon_2->Clear_Bsp_Tree(polygon_2->get_root());
-
     delete polygon_1;
+
     delete polygon_2;
 
 }
 
 template<typename T>
 void Work_w_Polygon<T>::Produce_Bsp_Trees(vector_coords first_polygon, vector_coords second_polygon) {
-    polygon_1 = new bsp::BSPTree<coord_type>(first_polygon);
-    polygon_2 = new bsp::BSPTree<coord_type>(second_polygon);
 
-    polygon_1->Make_Tree();
-    polygon_2->Make_Tree();
+    polygon_1 = new bsp::BSPTree<coord_type>(first_polygon);
+
+    polygon_2 = new bsp::BSPTree<coord_type>(second_polygon);
 }
 
 template<typename T>
@@ -265,5 +293,4 @@ std::istream &polygon::operator>>(std::istream &in, Work_w_Polygon<T> &object) {
     //this call will create two bsp trees for polygons
     object.Parse_The_String_With_Coordinates_And_Create_Two_Polygons(string_with_input_data_coordinates);
     return in;
-
 }

@@ -7,15 +7,14 @@
 using namespace bsp;
 
 template<typename T>
-typename BSPTree_Node<T>::node_ptr BSPTree_Node<T>::get_neg() {
+typename BSPTree_Node<T>::node_ptr BSPTree_Node<T>::get_neg() const {
     return neg_child;
 }
 
 template<typename T>
-typename BSPTree_Node<T>::node_ptr BSPTree_Node<T>::get_pos() {
+typename BSPTree_Node<T>::node_ptr BSPTree_Node<T>::get_pos() const {
     return pos_child;
 }
-
 
 template<typename T>
 BSPTree_Node<T>::BSPTree_Node(node_ptr pos, node_ptr neg, const_line_reference line2D) : pos_child(pos), neg_child(neg),
@@ -72,6 +71,13 @@ BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
             Insert_Edge(line_to_insert);
         }
     }
+
+    /*after creating right ordered list of edges I implement the creating a bsp Tree for a polygon
+     * It is obvious that i must create it in constructor otherwise the main idea of bsp representation of a
+     * polygon is leveled*/
+
+
+    Make_Tree();
 }
 
 template<typename T>
@@ -80,6 +86,53 @@ void BSPTree<T>::Insert_Edge(line_reference line2D) {
     edges.push_back(line2D);
 }
 
+//___________________copy costructor implementation_______________________ //
+template<typename T>
+BSPTree<T>::BSPTree(const_bsp_tree_reference copy) {
+    edges = copy.edges;
+
+    //make deep copy of the copy tree
+    root__ = Copy_Tree(copy.root__);
+}
+
+template<typename T>
+typename BSPTree<T>::node_ptr BSPTree<T>::Copy_Tree(const_node_ptr copy_ptr) {
+    if (!copy_ptr)
+        return nullptr;
+
+    node_ptr pos_child = Copy_Tree(copy_ptr->get_pos());
+    node_ptr neg_child = Copy_Tree(copy_ptr->get_neg());
+
+    auto pivotal = new BSPTree_Node<coord_type>(pos_child, neg_child, copy_ptr->get_edge());
+    return pivotal;
+
+}
+//________________________________________________________________________________________//
+
+//__________________assignment operator_________________________________________________//
+
+
+template<typename T>
+typename BSPTree<T>::bsp_tree_reference BSPTree<T>::operator=(const_bsp_tree_reference copy) {
+    if (this == &copy)
+        return *this;
+
+    edges = copy.edges;
+
+    //we must to flush the memory form old version of *this
+    Clear_Bsp_Tree(root__);
+
+    root__ = Copy_Tree(copy.get_root());
+
+    return *this;
+}
+
+template<typename T>
+BSPTree<T>::~BSPTree() {
+
+    //free memory in in the tree
+    Clear_Bsp_Tree(root__);
+}
 
 template<typename T>
 typename BSPTree<T>::node_ptr BSPTree<T>::Construct_Tree(iterator it, int pos_dist, int neg_dist, bool direction) {
@@ -188,21 +241,21 @@ void BSPTree<T>::Make_Tree() {
 }
 
 template<typename T>
-void BSPTree<T>::Clear_Bsp_Tree(node_ptr edge) {
-    if (!edge)
+void BSPTree<T>::Clear_Bsp_Tree(node_ptr node_edge) {
+    if (!node_edge)
         return;
 
-    Clear_Bsp_Tree(edge->get_neg());
-    Clear_Bsp_Tree(edge->get_pos());
+    Clear_Bsp_Tree(node_edge->get_neg());
+    Clear_Bsp_Tree(node_edge->get_pos());
 
-    delete edge;
+    delete node_edge;
 
 
 }
 
 template<typename T>
 typename BSPTree_Node<T>::const_line_reference BSPTree_Node<T>::get_edge() const {
-    return this->edge;
+    return edge;
 }
 
 template<typename T>

@@ -53,6 +53,8 @@ namespace polygon {
         using vector_coords = const std::vector <point_type> &;
         using iter = typename std::list<line_type>::iterator;
         using c_iter = typename std::list<line_type>::const_iterator;
+        using const_polyg_reference = const Work_w_Polygon<coord_type> &;
+        using polyg_reference = Work_w_Polygon<coord_type> &;
     private:
         bsp::BSPTree<coord_type> *polygon_1 = nullptr;
         bsp::BSPTree<coord_type> *polygon_2 = nullptr;
@@ -67,6 +69,12 @@ namespace polygon {
         Work_w_Polygon() = default;
 
         Work_w_Polygon(vector_coords first_polygon, vector_coords second_polygon);
+
+        Work_w_Polygon(const_polyg_reference copy);
+
+        polyg_reference operator=(const_polyg_reference copy);
+
+
 
         void intersect_polygons();
 

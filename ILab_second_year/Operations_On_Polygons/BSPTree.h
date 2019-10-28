@@ -25,15 +25,15 @@ namespace bsp {
         using const_line_reference = const line_2d<T> &;
         using node_ptr = BSPTree_Node *;
 
-        node_ptr pos_child;
-        node_ptr neg_child;
+        node_ptr pos_child = nullptr;
+        node_ptr neg_child = nullptr;
         line_2d<T> edge;
 
     public:
-        //of course i must write these methods for const objects, but not now !!!!!!!!!
-        node_ptr get_pos();
 
-        node_ptr get_neg();
+        node_ptr get_pos() const;
+
+        node_ptr get_neg() const;
 
         const_line_reference get_edge() const;
 
@@ -49,12 +49,15 @@ namespace bsp {
         using line_reference = line_2d<T> &;
         using coord_type = T;
         using node_ptr = BSPTree_Node<coord_type> *;
+        using const_node_ptr = const BSPTree_Node<coord_type> *;
         using node_type = BSPTree_Node<coord_type>;
         using point_type = point_2d<T>;
         using const_point_reference = const point_2d<T> &;
         using point_ptr = point_2d<T> *;
         using iterator = typename std::list<line_type>::iterator;
         using c_iterator = typename std::list<line_type>::const_iterator;
+        using const_bsp_tree_reference = const BSPTree<T> &;
+        using bsp_tree_reference = BSPTree<T> &;
 
     public:
 
@@ -63,12 +66,18 @@ namespace bsp {
         //this constructor will accept the vector of set of coordinates and prepare it for creating the bsp tree of a polygon
         explicit BSPTree(const std::vector<point_2d<T>> &coords);
 
+        //copy constructor
+        BSPTree(const_bsp_tree_reference copy);
+
+        //copy assignment operator
+        BSPTree &operator=(const_bsp_tree_reference copy);
+
+        ~BSPTree();
+
         void Polygon_Polygon_Intersection(std::list <line_type> &inside_edges, node_ptr polygon_which_intersect);
 
         void Partitioning_Line_Segment(std::list <line_type> &inside_edges, const_line_reference line2D,
                                        node_ptr polygon_for_intersect);
-
-        void Make_Tree();
 
         void Clear_Bsp_Tree(node_ptr edge);
 
@@ -122,6 +131,10 @@ namespace bsp {
 
         void Insert_Edge(line_reference line2D);
 
+        //recursive copy of the tree pointed by copy_ptr
+        node_ptr Copy_Tree(const_node_ptr copy_ptr);
+
+        void Make_Tree();
 
     };
 
