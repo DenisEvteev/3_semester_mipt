@@ -6,6 +6,12 @@
 #define COUNT_INTERSECTION_AREA_OF_TRIANGLE_LINE_2D_H
 
 
+/*On the first of November I've observed the bag in my project which is related to
+ * the comparison almost equal to zero values with just zero ---- we want in such situations to consider
+ * this value to be zero!!!!
+ * So I've written the function the equality to zero*/
+
+
 #include <iostream>
 #include <cstdlib>
 #include <cmath>
@@ -13,6 +19,7 @@
 
 #define NUL_LIMIT 1e-4
 #define CORRECTION 100
+#define NOL 0.0
 
 
 namespace line_tools {
@@ -135,11 +142,28 @@ public:
 
 };
 
+
+//These are helper functions to this classes
     template<typename T>
     inline T Kross(const point_2d<T> &vec1, const point_2d<T> &vec2);
 
     template<typename T>
     inline T Dot(const point_2d<T> &vec1, const point_2d<T> &vec2);
+
+
+    /*This function will deal with the situations when we compare the value with a zero value
+     * but the input value hasn't exactly a zero value
+     * This function will analyze the equality to zero using these rules
+     * We have the NUL_LIMIT -- it is the small float value which we are going to use for
+     *
+     * I've understood that when i compare any value to zero i must call this function -- it's necessary condition
+     * of healthy life
+     * due to i've faced off such a case twice and it's very painfully!!!!!
+     *
+     *
+     * and this function return true if the value is almost zero or just a zero value*/
+    template<typename T>
+    inline bool equality_to_zero(T value);
 
     void Error_Message();
 

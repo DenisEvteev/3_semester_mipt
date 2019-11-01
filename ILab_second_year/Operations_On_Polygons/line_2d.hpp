@@ -56,6 +56,11 @@ void line_tools::Error_Message() {
     std::cout << "The file name is : " << __FILE__ << std::endl;
     exit(EXIT_FAILURE);
 }
+
+template<typename T>
+inline bool line_tools::equality_to_zero(T value) {
+    return std::fabs(value) <= NUL_LIMIT;
+}
 //-------------------------------------------------------------------------------------------------//
 
 //_____________________Implementations of line_2d class methods_____________________________________//
@@ -76,12 +81,12 @@ line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int &type_int
     } else if (Dot(normal, line2D.pt1_) - c < 0 && Dot(normal, line2D.pt2_) - c < 0) {
         type_intersect = Negative;
         return nullptr;
-    } else if ((Dot(normal, line2D.pt1_) - c == 0 && Dot(normal, line2D.pt2_) - c > 0) ||
-               (Dot(normal, line2D.pt2_) - c == 0 && Dot(normal, line2D.pt1_) - c > 0)) {
+    } else if ((equality_to_zero(Dot(normal, line2D.pt1_) - c) && Dot(normal, line2D.pt2_) - c > 0) ||
+               (equality_to_zero(Dot(normal, line2D.pt2_) - c) && Dot(normal, line2D.pt1_) - c > 0)) {
         type_intersect = Positive;
         return nullptr;
-    } else if ((Dot(normal, line2D.pt1_) - c == 0 && Dot(normal, line2D.pt2_) - c < 0) ||
-               (Dot(normal, line2D.pt2_) - c == 0 && Dot(normal, line2D.pt1_) - c < 0)) {
+    } else if ((equatity_to_zero(Dot(normal, line2D.pt1_) - c) && Dot(normal, line2D.pt2_) - c < 0) ||
+               (equality_to_zero(Dot(normal, line2D.pt2_) - c) && Dot(normal, line2D.pt1_) - c < 0)) {
         type_intersect = Negative;
         return nullptr;
     } else {
@@ -89,11 +94,11 @@ line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int &type_int
         //the critical section dividing by zero can appear, so i must think about another better desicion
 
 
-        if (normal.x_ == 0) {
+        if (equality_to_zero(normal.x_)) {
             /*the case when the normal is perpendicular to x axis, so we know exactly y_coord of the
             * common_point in intersection of these two line segments*/
             coord_type y_coord = pt1_.y_;
-            if (line2D.normal.x_ == 0)
+            if (equality_to_zero(line2D.normal.x_))
                 Error_Message();
             coord_type x_coord = (line2D.c - y_coord * line2D.normal.y_) / line2D.normal.x_;
             auto point_in_intersection_lines = new point_type(x_coord, y_coord);
@@ -103,7 +108,7 @@ line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int &type_int
         }
 
         coord_type check_error = line2D.normal.y_ * normal.x_ - normal.y_ * line2D.normal.x_;
-        if (check_error == 0)
+        if (equality_to_zero(check_error))
             Error_Message();
 
         coord_type y_coord = (line2D.c * normal.x_ - c * line2D.normal.x_) / check_error;
@@ -148,14 +153,18 @@ typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_referen
 
 
     //case when two lines are coincidence
-    if (vector_left == 0 && vector_right == 0 && another_vector_left == 0 && another_vector_right == 0) {
+    if (equality_to_zero(vector_left) &&
+        equality_to_zero(vector_right) &&
+        equality_to_zero(another_vector_left) &&
+        equality_to_zero(another_vector_right)) {
         Type_Coincedence(line2D, type_intersect);
         return nullptr;
     }
 
     //we are in here so the lines exactly have the common point !!!
     //check case when the line2D to the positive side of spliting line
-    if ((vector_left == 0 && vector_right != 0) || (vector_left != 0 && vector_right == 0)) {
+    if ((equality_to_zero(vector_left) && !equality_to_zero(vector_right)) ||
+        (!equality_to_zero(vector_left) && equality_to_zero(vector_right))) {
         auto common_point = Pos_Neg_Area(line2D, type_intersect);
         if (!common_point) {
             std::cout << "ERROR!!! in finding the common point in touch case\n";
@@ -165,10 +174,10 @@ typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_referen
 
     }
     //not do anything
-    if ((another_vector_left == 0 && another_vector_right != 0) ||
-        (another_vector_right == 0 && another_vector_left != 0)) {
+    if ((equality_to_zero(another_vector_left) && !equality_to_zero(another_vector_right)) ||
+        (equality_to_zero(another_vector_right) && !equality_to_zero(another_vector_left))) {
         point_ptr common_point;
-        if (Dot(pt1_, line2D.normal) - line2D.c == 0) {
+        if (equality_to_zero(Dot(pt1_, line2D.normal) - line2D.c)) {
             common_point = new point_type(pt1_);
         } else
             common_point = new point_type(pt2_);
@@ -186,16 +195,16 @@ typename line_2d<T>::point_ptr line_2d<T>::lines_intersection(const_line_referen
     coord_type y_numerator = line2D.pt1_.y_ - line2D.pt2_.y_;
 
 
-    if (denominator == 0)
+    if (equality_to_zero(denominator))
         Error_Message();
 
     coord_type x_coord = x_numerator / denominator + line2D.pt2_.x_;
     coord_type y_coord = y_numerator / denominator + line2D.pt2_.y_;
 
-    if ((x_coord > 0 && x_coord <= NUL_LIMIT) || (x_coord < 0 && x_coord >= -NUL_LIMIT))
-        x_coord = 0.0;
-    if ((y_coord > 0 && y_coord <= NUL_LIMIT) || (y_coord < 0 && y_coord >= -NUL_LIMIT))
-        y_coord = 0.0;
+    if (equality_to_zero(x_coord))
+        x_coord = NOL;
+    if (equality_to_zero(y_coord))
+        y_coord = NOL;
 
     auto common_point_ptr = new point_type(x_coord, y_coord);
     type_intersect = Crossing;
@@ -213,7 +222,7 @@ void line_2d<T>::Type_Coincedence(const_line_reference line2D, int &type_interse
 
     }
     //case when the spliting line is vertical (very different case)
-    if (Dot(guiding, {1, 0}) == 0) {
+    if (equality_to_zero(Dot(guiding, {1, 0}))) {
         Coincedence_In_Vertical_Case(line2D, type_intersect);
         return;
     }
