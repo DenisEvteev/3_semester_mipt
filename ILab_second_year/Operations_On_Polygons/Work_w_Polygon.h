@@ -16,10 +16,10 @@
 
 #define TRIANGLE_TESTS "Tests/data/triangle.txt"
 #define TRIANGLE_RESULTS "Tests/res/.txt"
+#define LATEX_REPORT_FILE_PATH "Tests/latex/info.tex"
 
 #define POS_RES_NUMBER 10
 #define POS_NUMBER 19
-
 
 
 /*this values represent the number of vertex in polygons
@@ -104,9 +104,27 @@ namespace polygon {
 
     };
 
-    /*helper function for exit in the case when the string of input data is very bad
-     * this function will work when the std::stof haven't managed in making the float value from substring*/
-    void Error_Exit();
+    /*_______________A small help for the users of this application____________
+     * If you want to know how does this program works and what kind of steps it produces in case of each function
+     * you can call the corresponding function in each class and preamble function below
+     * and define in each corresponding file define
+     * [DUMP_THE_PROCESS_INFORMATION_IN_LATEX]
+     *
+     * doing this you can :
+     * 1) Look though the input data of coordinates
+     * 2) Look at the bsp tree representation of polygons as a digraphs created using dot language
+     * 3) Look at the answer of the calculated area of intersection of polygons
+     * 4) Look at the common line segments which form the common polygon of intersection
+     * 5) Look at the developer contacts
+     *
+     *
+     *
+     * ______This function takes a string which represents the number of file to dump the whole
+     * information about the process*/
+
+    void DumpPreambleInLatex(std::ofstream &out);
+
+    void File_Is_Not_Opened();
 }
 
 

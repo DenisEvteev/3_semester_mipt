@@ -4,6 +4,14 @@
 
 #include "BSPTree.h"
 
+#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+
+/*The definition of the name_dump which represent the section for dumping*/
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+template<typename T>
+typename std::string bsp::BSPTree<T>::name_dump = "First";
+#endif
+
 using namespace bsp;
 
 template<typename T>
@@ -76,9 +84,107 @@ BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
      * It is obvious that i must create it in constructor otherwise the main idea of bsp representation of a
      * polygon is leveled*/
 
+#ifdef  DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+    Print_Right_Directed_Edges(coords);
+#endif
 
     Make_Tree();
 }
+
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+
+template<typename T>
+void BSPTree<T>::Print_Right_Directed_Edges(const std::vector<point_type> &coords) const {
+    std::ofstream file_dump;
+    file_dump.open(LATEX_REPORT_FILE_PATH, std::ios::app);
+    if (!file_dump.is_open())
+        File_Is_Not_Opened();
+    file_dump << "\\section{" << name_dump << " polygon description}\n\n";
+
+    file_dump << "\\begin{itemize}\n";
+    file_dump << "\\item\\textbf{Initial vertexes' coords of the " << name_dump << " polygon :} " << "\\fbox{";
+
+    for (auto it : coords) {
+        file_dump << '(' << it.x_ << ", " << it.y_ << ") ";
+    }
+
+    file_dump << "}\\\\\n";
+
+    file_dump << "\\noindent\\item\\textbf{The right directed edges of the " << name_dump << " polygon :}\n";
+
+    Print_Edges_From_List<T>(edges.cbegin(), edges.cend(), file_dump, name_dump);
+
+    file_dump.close();
+
+}
+
+template<typename T>
+void bsp::Print_Edges_From_List(typename std::list<line_2d<T>>::const_iterator it_beg,
+                                typename std::list<line_2d<T>>::const_iterator it_end,
+                                std::ofstream &out, const std::string &name_file) {
+    /*For printing all the edges i'm going to print in latex numbers with necessary description of labels and then
+    * in the second loop i will print these numbers with the arrows */
+
+    if (!out.is_open())
+        File_Is_Not_Opened();
+
+    if (it_beg == it_end) {
+        out << "Empty\n";
+        return;
+    }
+
+    out << "\\begin{flushleft}\n";
+    out << "\\digraph[scale=0.4]{" << name_file << "}{node[shape=box];rankdir=LR;";
+
+    int number = 0;
+    for (; it_beg != it_end; ++it_beg) {
+        out << number << "[label=\"[" << it_beg->pt1_.x_ << "; " << it_beg->pt1_.y_ << "] ---> [" << it_beg->pt2_.x_
+            << "; " << it_beg->pt2_.y_ << "]\"]\n";
+        ++number;
+    }
+    out << ";";
+    for (int i = 0; i < number; ++i) {
+        i == (number - 1) ? out << i : out << i << "->";
+    }
+
+    out << ";}\n\n" << "\\end{flushleft}\n";
+}
+
+
+template<typename T>
+int BSPTree<T>::dump_tree(const_node_ptr node, std::ofstream &out) const {
+
+    if (!out.is_open())
+        File_Is_Not_Opened();
+
+    if (!node)
+        return NULL_NODE;
+
+    ++cur_number_node;
+    int pos_id = dump_tree(node->get_pos(), out);
+
+    int neg_id = dump_tree(node->get_neg(), out);
+
+
+    out << cur_number_node << "[label=\"[" << node->get_edge().pt1_.x_ << ";" << node->get_edge().pt1_.y_ << "] ---> ["
+        <<
+        node->get_edge().pt2_.x_ << ";" << node->get_edge().pt2_.y_ << "]\"] ";
+
+    /*Now it work only for triangles when one node have only one child*/
+
+    if (pos_id != NULL_NODE) {
+        out << cur_number_node << "->" << pos_id << " [color=red,label=\"pos\"] ";
+        out << cur_number_node << "-> -230 [color=blue,style=dotted,label=\"neg\"] ";
+    }
+    if (neg_id != NULL_NODE) {
+        out << cur_number_node << "-> -230 [color=red,style=dotted,label=\"pos\"] ";
+        out << cur_number_node << "->" << neg_id << " [color=blue,label=\"neg\"] ";
+    }
+
+    return cur_number_node--;
+}
+
+#endif
 
 template<typename T>
 void BSPTree<T>::Insert_Edge(line_reference line2D) {
@@ -88,12 +194,7 @@ void BSPTree<T>::Insert_Edge(line_reference line2D) {
 
 //___________________copy costructor implementation_______________________ //
 template<typename T>
-BSPTree<T>::BSPTree(const_bsp_tree_reference copy) {
-    edges = copy.edges;
-
-    //make deep copy of the copy tree
-    root__ = Copy_Tree(copy.root__);
-}
+BSPTree<T>::BSPTree(const_bsp_tree_reference copy) : root__(Copy_Tree(copy.root__)), edges(copy.edges) {}
 
 template<typename T>
 typename BSPTree<T>::node_ptr BSPTree<T>::Copy_Tree(const_node_ptr copy_ptr) {
@@ -238,6 +339,33 @@ void BSPTree<T>::Make_Tree() {
     //______________Creating the bsp tree for polygon___________________//
     root__ = Construct_Tree(edges.begin(), 0, edges.size() - 1, false);
 
+
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+    /*Here i'm going to call the function which will print the bsp tree of a polygon in
+    * latex file*/
+    std::ofstream file_dump;
+    file_dump.open(LATEX_REPORT_FILE_PATH, std::ios::app);
+    if (!file_dump.is_open())
+        File_Is_Not_Opened();
+
+    file_dump << "\\noindent\\item\\textbf{BSPTree representation of the First polygon :}\n";
+    file_dump << "\\begin{center}\n";
+    file_dump << "\\digraph[scale=0.5]{" << name_dump << "bsp}{node[shape=box];";
+    file_dump << "-230[shape=circle,label=\"empty\"] ";
+
+
+    dump_tree(root__, file_dump);
+
+    file_dump << "}\n\n";
+
+    file_dump << "\\end{center}\n";
+    file_dump << "\\end{itemize}\n";
+
+    name_dump = "Second";
+
+    file_dump.close();
+
+#endif
 }
 
 template<typename T>
@@ -434,7 +562,7 @@ void BSPTree<T>::Point_Position_In_Polygon(const_point_reference point, node_ptr
     //using the fact of initial counterclockwise direction of points
     if (!edge->get_neg() && !edge->get_pos()) {
         //the case when the point lie on the last line segment of given polygon
-        if (check_position == 0) {
+        if (line_tools::equality_to_zero(check_position)) {
             type_pos = On;
             return;
         }
@@ -449,7 +577,8 @@ void BSPTree<T>::Point_Position_In_Polygon(const_point_reference point, node_ptr
         //point is situated in the different area than normal lies
     else if (check_position < 0) {
         Point_Position_In_Polygon(point, edge->get_neg(), type_pos);
-    } else if (check_position == 0 && point.y_ >= edge->get_edge().pt1_.y_ && point.y_ <= edge->get_edge().pt2_.y_) {
+    } else if (line_tools::equality_to_zero(check_position) && point.y_ >= edge->get_edge().pt1_.y_ &&
+               point.y_ <= edge->get_edge().pt2_.y_) {
 
         if (edge->get_edge().pt1_.x_ < edge->get_edge().pt2_.x_) {
             if (point.x_ >= edge->get_edge().pt1_.x_ && point.x_ <= edge->get_edge().pt2_.x_) {
@@ -482,21 +611,29 @@ void BSPTree<T>::Check_Inside_Outside_Last_Edge(const_point_reference point, int
 
     if (last_node->get_edge().is_counterclockwise) {
 
+
+        //here i can observe the standart error which is caused in comparison the value with zero
+        //when the value is almost equal to zero we want to consider it like a zero v
         coord_type value = Dot(point, last_node->get_edge().normal) - last_node->get_edge().c;
-        if (value < 0)
+
+        if (equality_to_zero(value))
+            type_pos = On;
+        else if (value < 0)
             type_pos = Inside;
         else if (value > 0)
             type_pos = Outside;
-        else type_pos = On;
+
     } else {
         point_type normal_initial_dir(-(last_node->get_edge().normal.x_), -(last_node->get_edge().normal.y_));
         coord_type c_initial_value = Dot(normal_initial_dir, last_node->get_edge().pt2_);
         coord_type value = Dot(point, normal_initial_dir) - c_initial_value;
-        if (value < 0)
+
+        if (equality_to_zero(value))
+            type_pos = On;
+        else if (value < 0)
             type_pos = Inside;
         else if (value > 0)
             type_pos = Outside;
-        else type_pos = On;
     }
 
     //NO OTHER CANDIDATES   ;) ;) ;)

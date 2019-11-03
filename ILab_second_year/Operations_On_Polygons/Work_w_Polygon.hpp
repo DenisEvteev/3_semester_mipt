@@ -4,6 +4,8 @@
 
 #include "Work_w_Polygon.h"
 
+#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+
 using namespace polygon;
 
 
@@ -125,63 +127,75 @@ void Work_w_Polygon<T>::Parse_The_String_With_Coordinates_And_Create_Two_Polygon
 
 
         else {
+            /*___________________ IF we won't be able to find the second coordinate in the _________________
+            * string then immediate error will be ocurred */
 
-            try {
-                /*___________________ IF we won't be able to find the second coordinate in the _________________
-                 * string then immediate error will be ocurred */
+            //find the first bad character
+            size_t the_end_of_the_value = convenient_work.find_first_of(bad_characters, ip);
+            assert(the_end_of_the_value != std::string::npos);
 
-                //find the first bad character
-                size_t the_end_of_the_value = convenient_work.find_first_of(bad_characters, ip);
-                assert(the_end_of_the_value != std::string::npos);
+            //find the start of the second coordinate of the edge
 
-                //find the start of the second coordinate of the edge
-                size_t next_space = convenient_work.find_first_not_of(bad_characters, the_end_of_the_value + 1);
-                assert(next_space != std::string::npos);
+            size_t next_space = convenient_work.find_first_not_of(bad_characters, the_end_of_the_value + 1);
+            assert(next_space != std::string::npos);
 
-                //take the first coordinate
-                coord_type x_coord = std::stof(convenient_work.substr(ip, the_end_of_the_value));
-                ip = next_space;
-                //now i am at the next value
 
-                the_end_of_the_value = convenient_work.find_first_of(bad_characters, ip);
+            //take the first coordinate
+            coord_type x_coord = std::stof(convenient_work.substr(ip, the_end_of_the_value));
+            ip = next_space;
+            //now i am at the next value
 
-                //take the second coordinate
-                coord_type y_coord = std::stof(convenient_work.substr(ip, the_end_of_the_value));
+            the_end_of_the_value = convenient_work.find_first_of(bad_characters, ip);
 
-                first_polygon.size() < TYPE_OF_THE_FIRST_POLYGON ? first_polygon.push_back(point_type(x_coord, y_coord))
-                                                                 :
-                second_polygon.push_back(point_type(x_coord, y_coord));
+            //take the second coordinate
+            coord_type y_coord = std::stof(convenient_work.substr(ip, the_end_of_the_value));
 
-                ip = the_end_of_the_value;
+            first_polygon.size() < TYPE_OF_THE_FIRST_POLYGON ? first_polygon.push_back(point_type(x_coord, y_coord))
+                                                             : second_polygon.push_back(point_type(x_coord, y_coord));
+            ip = the_end_of_the_value;
 
-            } catch (const std::out_of_range &except) {
-                std::cout << except.what() << std::endl;
-                Error_Exit();
-
-            }
-            catch (const std::invalid_argument &except) {
-                std::cout << except.what() << std::endl;
-                Error_Exit();
-            }
         }
-
-
     }
 
     assert(first_polygon.size() == TYPE_OF_THE_FIRST_POLYGON && second_polygon.size() == TYPE_OF_THE_SECOND_POLYGON);
 
     Produce_Bsp_Trees(first_polygon, second_polygon);
 
-
 }
+//------------------------Helper functions--------------------------------------------------//
 
-void polygon::Error_Exit() {
-    std::cout << "The exception has appeared on the " << __LINE__ << "line" << std::endl;
-    std::cout << "The function's name is : " << __PRETTY_FUNCTION__ << std::endl;
-    std::cout << "The error in the file with name : " << __FILE__ << std::endl;
+void polygon::File_Is_Not_Opened() {
+    std::cout << "The file isn't opened" << std::endl;
+    std::cout << "Error is in the " << __FILE__ << std::endl;
+    std::cout << "ERROR in " << __LINE__ << " line" << std::endl;
     exit(EXIT_FAILURE);
 }
 
+
+void polygon::DumpPreambleInLatex(std::ofstream &out) {
+
+    if (!out.is_open()) {
+        File_Is_Not_Opened();
+    }
+
+    out << "\\documentclass[a4paper,12pt]{article}\n";
+
+    out << "\\usepackage[T2A]{fontenc}\n"
+           "\\usepackage[utf8]{inputenc}\n"
+           "\\usepackage[english,russian]{babel}\n"
+           "\\usepackage[pdf]{graphviz}\n"
+           "\\usepackage{graphicx, xcolor}\n";
+
+    out << "\\title{Finding Intersection area\\\\The whole report}\n"
+           "\\author{Evteev Denis}\n"
+           "\\date{\\today{}}\n";
+
+    out << "\\begin{document}\n";
+    out << "\\maketitle\n\n";
+
+}
+
+//----------------------------------------------------------------------------------------//
 //#define PRINT_RESULT_IN_FILE
 
 template<typename T>
@@ -210,6 +224,19 @@ typename Work_w_Polygon<T>::coord_type Work_w_Polygon<T>::Area_Trapezoids() cons
     file_with_result.close();
 #endif
 
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+    std::ofstream file_dump;
+    file_dump.open(LATEX_REPORT_FILE_PATH, std::ios::app);
+    if (!file_dump.is_open())
+        File_Is_Not_Opened();
+
+    file_dump << "\\begin{center}\n";
+    file_dump << "\\fbox{\\Large{\\textbf{intersection area is equal to :  " << area << "}}}\n\n";
+    file_dump << "\\end{center}\n";
+    file_dump << "\\end{document}\n\n";
+    file_dump.close();
+#endif
+
     return area;
 }
 
@@ -218,8 +245,37 @@ typename Work_w_Polygon<T>::coord_type Work_w_Polygon<T>::Area_Trapezoids() cons
 template<typename T>
 void Work_w_Polygon<T>::intersect_polygons() {
 
+    /*This line represent finding the lines of polygon_2 which lie within the polygon_1*/
     polygon_1->Polygon_Polygon_Intersection(common_lines, polygon_2->get_root());
+
+    /*This part of code will represent the lines of polygon_2 which lie within polygon_1*/
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+    std::ofstream file_dump;
+    file_dump.open(LATEX_REPORT_FILE_PATH, std::ios::app);
+    if (!file_dump.is_open())
+        File_Is_Not_Opened();
+
+    file_dump << "\\section{Finding common lines :}\n\n";
+    file_dump << "\\begin{itemize}\n";
+    file_dump << "\\item\\noindent\\textbf{The second polygon's line segments that lie within the first one}\\\\\n";
+    bsp::Print_Edges_From_List<coord_type>(common_lines.cbegin(), common_lines.cend(), file_dump,
+                                           std::string("secondinfirst"));
+    auto it = common_lines.cend();
+    --it;
+
+#endif
+
+    /*This line represent finding lines of polygon_1 which lie within polygon_2*/
     polygon_2->Polygon_Polygon_Intersection(common_lines, polygon_1->get_root());
+
+
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+
+    ++it;
+    file_dump << "\\noindent\\item\\textbf{The first polygon's line segments that lie within the second one}\\\\\n";
+    bsp::Print_Edges_From_List<coord_type>(it, common_lines.cend(), file_dump, std::string("firstinsecond"));
+
+#endif
 
 
     /*This functions will change places of some line segments to produce
@@ -229,6 +285,15 @@ void Work_w_Polygon<T>::intersect_polygons() {
      * each begin of the edge starts with the end of the previous edge except the first one due to it has the start
      * in the end of last edge in the list*/
     MakeCounterClockwiseOrder();
+
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+
+    file_dump << "\\noindent\\item\\textbf{Common line segments in counterclockwise order}\\\\\n";
+    bsp::Print_Edges_From_List<coord_type>(common_lines.cbegin(), common_lines.cend(), file_dump, std::string("end"));
+    file_dump << "\\end{itemize}\n";
+    file_dump.close();
+
+#endif
 }
 
 
@@ -284,13 +349,33 @@ void Work_w_Polygon<T>::MakeCounterClockwiseOrder() {
  * And if the number of coordinates is bad then this function will return an error message
  * */
 
+
+
+
+/*The first dump in latex will start with the input data, so initially we
+ * call function connected with latex in here*/
 template<typename T>
 std::istream &polygon::operator>>(std::istream &in, Work_w_Polygon<T> &object) {
     std::string string_with_input_data_coordinates;
     //request for data from stdin
     std::getline(std::cin, string_with_input_data_coordinates);
 
+
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+    std::ofstream file_dump(LATEX_REPORT_FILE_PATH);
+    if (!file_dump.is_open()) {
+        File_Is_Not_Opened();
+    }
+
+    DumpPreambleInLatex(file_dump);
+    file_dump << "\\textbf{Input data :} " << "\\fbox{" <<
+              string_with_input_data_coordinates << "}\n";
+    file_dump.close();
+#endif
+
     //this call will create two bsp trees for polygons
     object.Parse_The_String_With_Coordinates_And_Create_Two_Polygons(string_with_input_data_coordinates);
     return in;
 }
+
+#undef DUMP_THE_PROCESS_INFORMATION_IN_LATEX

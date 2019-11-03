@@ -8,6 +8,11 @@
 #include "line_2d.h"
 #include <list>
 #include <vector>
+#include <map>
+
+#define NULL_NODE -1
+
+#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
 
 using namespace line_tools;
 
@@ -60,6 +65,26 @@ namespace bsp {
         using bsp_tree_reference = BSPTree<T> &;
 
     public:
+        /*This string will represent the name of current polygon, which description we
+         * are dumping in latex file
+         * I mean that i'm going to use it for printing the section describing the current polygon processing
+         * */
+#ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+        static std::string name_dump;
+
+        void Print_Right_Directed_Edges(const std::vector<point_type> &coords) const;
+
+        /*This function returns the id of the node which description was dumped in latex otherwise
+         * it returns NULL_NODE (aka -1) */
+        int dump_tree(const_node_ptr node, std::ofstream &out) const;
+
+        /*This field i'm going to use for printing the corresponding integer value for the description
+         * of nodes for dot language*/
+        mutable int cur_number_node = -1;
+        /*This map will contain two strings the first is two edges connection with arrows
+         * and the second is the description of the arrow(label, color)*/
+        std::map<std::string, std::string> node_edge;
+#endif
 
         node_ptr get_root() const;
 
@@ -137,6 +162,11 @@ namespace bsp {
         void Make_Tree();
 
     };
+
+    template<typename T>
+    void Print_Edges_From_List(typename std::list<line_2d<T>>::const_iterator it_beg,
+                               typename std::list<line_2d<T>>::const_iterator it_end,
+                               std::ofstream &out, const std::string &name_file);
 
 }
 

@@ -85,7 +85,7 @@ line_2d<T>::Type_Area_No_Intersection(const_line_reference line2D, int &type_int
                (equality_to_zero(Dot(normal, line2D.pt2_) - c) && Dot(normal, line2D.pt1_) - c > 0)) {
         type_intersect = Positive;
         return nullptr;
-    } else if ((equatity_to_zero(Dot(normal, line2D.pt1_) - c) && Dot(normal, line2D.pt2_) - c < 0) ||
+    } else if ((equality_to_zero(Dot(normal, line2D.pt1_) - c) && Dot(normal, line2D.pt2_) - c < 0) ||
                (equality_to_zero(Dot(normal, line2D.pt2_) - c) && Dot(normal, line2D.pt1_) - c < 0)) {
         type_intersect = Negative;
         return nullptr;
