@@ -1,0 +1,4 @@
+digraph First {node[shape=box];rankdir=LR;0[label="[0; 0] ---> [7; 0]"]
+1[label="[7; 0] ---> [2; 3]"]
+2[label="[0; 0] ---> [2; 3]"]
+;0->1->2;}

@@ -1,0 +1,1 @@
+digraph Firstbsp {node[shape=box];-230[shape=circle,label="empty"] 2[label="[0;0] ---> [2;3]"] 1[label="[7;0] ---> [2;3]"] 1-> -230 [color=red,style=dotted,label="pos"] 1->2 [color=blue,label="neg"] 0[label="[0;0] ---> [7;0]"] 0-> -230 [color=red,style=dotted,label="pos"] 0->1 [color=blue,label="neg"] }

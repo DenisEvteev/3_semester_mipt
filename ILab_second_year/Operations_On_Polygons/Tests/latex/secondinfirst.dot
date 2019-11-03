@@ -1,0 +1,4 @@
+digraph secondinfirst {node[shape=box];rankdir=LR;0[label="[2.33333; 0] ---> [4; 1]"]
+1[label="[4; 1] ---> [4.22222; 1.66667]"]
+2[label="[3.25; 2.25] ---> [1; 0]"]
+;0->1->2;}

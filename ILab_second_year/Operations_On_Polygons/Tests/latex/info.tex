@@ -1,0 +1,84 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+\usepackage[pdf]{graphviz}
+\usepackage{graphicx, xcolor}
+\title{Finding Intersection area\\The whole report}
+\author{Evteev Denis}
+\date{\today{}}
+\begin{document}
+    \maketitle
+
+    \textbf{Input data :} \fbox{0 0 2 3 7 0 -1 -2 5 4 4 1}
+    \section{First polygon description}
+
+    \begin{itemize}
+        \item\textbf{Initial vertexes' coords of the First polygon :} \fbox{(0, 0) (2, 3) (7, 0) }\\
+        \noindent\item\textbf{The right directed edges of the First polygon :}
+        \begin{flushleft}
+            \digraph[scale=0.4]{First}{node[shape=box];rankdir=LR;0[label="[0; 0] ---> [7; 0]"]
+            1[label="[7; 0] ---> [2; 3]"]
+            2[label="[0; 0] ---> [2; 3]"]
+            ;0->1->2;}
+
+        \end{flushleft}
+        \noindent\item\textbf{BSPTree representation of the First polygon :}
+        \begin{center}
+            \digraph[scale=0.5]{Firstbsp}{node[shape=box];-230[shape=circle,label="empty"] 2[label="[0;0] ---> [2;3]"] 1[label="[7;0] ---> [2;3]"] 1-> -230 [color=red,style=dotted,label="pos"] 1->2 [color=blue,label="neg"] 0[label="[0;0] ---> [7;0]"] 0-> -230 [color=red,style=dotted,label="pos"] 0->1 [color=blue,label="neg"] }
+
+        \end{center}
+    \end{itemize}
+    \section{Second polygon description}
+
+    \begin{itemize}
+        \item\textbf{Initial vertexes' coords of the Second polygon :} \fbox{(-1, -2) (5, 4) (4, 1) }\\
+        \noindent\item\textbf{The right directed edges of the Second polygon :}
+        \begin{flushleft}
+            \digraph[scale=0.4]{Second}{node[shape=box];rankdir=LR;0[label="[-1; -2] ---> [4; 1]"]
+            1[label="[4; 1] ---> [5; 4]"]
+            2[label="[-1; -2] ---> [5; 4]"]
+            ;0->1->2;}
+
+        \end{flushleft}
+        \noindent\item\textbf{BSPTree representation of the First polygon :}
+        \begin{center}
+            \digraph[scale=0.5]{Secondbsp}{node[shape=box];-230[shape=circle,label="empty"] 2[label="[-1;-2] ---> [5;4]"] 1[label="[4;1] ---> [5;4]"] 1-> -230 [color=red,style=dotted,label="pos"] 1->2 [color=blue,label="neg"] 0[label="[-1;-2] ---> [4;1]"] 0-> -230 [color=red,style=dotted,label="pos"] 0->1 [color=blue,label="neg"] }
+
+        \end{center}
+    \end{itemize}
+    \section{Finding common lines :}
+
+    \begin{itemize}
+        \item\noindent\textbf{The second polygon's line segments that lie within the first one}\\
+        \begin{flushleft}
+            \digraph[scale=0.4]{secondinfirst}{node[shape=box];rankdir=LR;0[label="[2.33333; 0] ---> [4; 1]"]
+            1[label="[4; 1] ---> [4.22222; 1.66667]"]
+            2[label="[3.25; 2.25] ---> [1; 0]"]
+            ;0->1->2;}
+
+        \end{flushleft}
+        \noindent\item\textbf{The first polygon's line segments that lie within the second one}\\
+        \begin{flushleft}
+            \digraph[scale=0.4]{firstinsecond}{node[shape=box];rankdir=LR;0[label="[1; 0] ---> [2.33333; 0]"]
+            1[label="[4.22222; 1.66667] ---> [3.25; 2.25]"]
+            ;0->1;}
+
+        \end{flushleft}
+        \noindent\item\textbf{Common line segments in counterclockwise order}\\
+        \begin{flushleft}
+            \digraph[scale=0.4]{end}{node[shape=box];rankdir=LR;0[label="[2.33333; 0] ---> [4; 1]"]
+            1[label="[4; 1] ---> [4.22222; 1.66667]"]
+            2[label="[4.22222; 1.66667] ---> [3.25; 2.25]"]
+            3[label="[3.25; 2.25] ---> [1; 0]"]
+            4[label="[1; 0] ---> [2.33333; 0]"]
+            ;0->1->2->3->4;}
+
+        \end{flushleft}
+    \end{itemize}
+    \begin{center}
+        \fbox{\Large{\textbf{intersection area is equal to : 3.30556}}}
+
+    \end{center}
+\end{document}
+
