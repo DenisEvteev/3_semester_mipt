@@ -86,9 +86,6 @@ namespace bsp {
         /*This field i'm going to use for printing the corresponding integer value for the description
          * of nodes for dot language*/
         mutable int cur_number_node = -1;
-        /*This map will contain two strings the first is two edges connection with arrows
-         * and the second is the description of the arrow(label, color)*/
-        std::map<std::string, std::string> node_edge;
 #endif
 
         node_ptr get_root() const;
