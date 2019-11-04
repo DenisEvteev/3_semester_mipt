@@ -32,7 +32,6 @@ int main() {
     /*I've changed the pointer to the function which will be called in case
      * when the operating system cannot manage with allocating more memory for this process*/
     std::set_new_handler(MyNewHandler);
-
     Work_w_Polygon<float> triangle_intersection;
 
 
@@ -55,6 +54,7 @@ int main() {
     /*Counting the area of intersection
      * This method will print the result value to the corresponding file if PRINT_RESULT_IN_FILE will be defined
      * conversly it will return only the the result as a copy*/
+
     float area_intersect = triangle_intersection.Area_Trapezoids();
 
     assert(area_intersect >= 0);

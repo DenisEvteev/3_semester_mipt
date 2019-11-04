@@ -13,23 +13,17 @@
 #include <cstring>
 #include <string>
 
-
+#define PATH_TO_DUMP_BSP_TREE "Tests/bsp_trees/pentagon.tex"
 #define TRIANGLE_TESTS "Tests/data/triangle.txt"
 #define TRIANGLE_RESULTS "Tests/res/.txt"
 #define LATEX_REPORT_FILE_PATH "Tests/latex/info.tex"
 
-#define POS_RES_NUMBER 10
-#define POS_NUMBER 19
-
-
-/*this values represent the number of vertex in polygons
- * we need in these values for determining number of iterations in the loop of parcing the string with
- * the input data of coordinates of two polygons.
- * Initially we work with two triangles*/
-
-#define TYPE_OF_THE_FIRST_POLYGON 3
-#define TYPE_OF_THE_SECOND_POLYGON 3
-
+enum {
+    POS_RES_NUMBER = 10,
+    POS_NUMBER = 19,
+    TYPE_OF_THE_FIRST_POLYGON = 3,
+    TYPE_OF_THE_SECOND_POLYGON = 3
+};
 
 namespace polygon {
 

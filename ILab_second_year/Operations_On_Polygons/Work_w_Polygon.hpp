@@ -4,7 +4,7 @@
 
 #include "Work_w_Polygon.h"
 
-#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+//#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
 
 using namespace polygon;
 
@@ -16,12 +16,11 @@ Work_w_Polygon<T>::Work_w_Polygon(vector_coords first_polygon, vector_coords sec
 
 //impementation of copy constructor and assignment operator
 template<typename T>
-Work_w_Polygon<T>::Work_w_Polygon(const_polyg_reference copy) {
-    common_lines = copy.common_lines;
-    id_file_for_tests = copy.id_file_for_tests;
-    polygon_1 = new bsp::BSPTree<coord_type>(*copy.polygon_1);
-    polygon_2 = new bsp::BSPTree<coord_type>(*copy.polygon_2);
-}
+Work_w_Polygon<T>::Work_w_Polygon(const_polyg_reference copy) :
+        polygon_1(new bsp::BSPTree<coord_type>(*copy.polygon_1)),
+        polygon_2(new bsp::BSPTree<coord_type>(*copy.polygon_2)),
+        common_lines(copy.common_lines),
+        id_file_for_tests(copy.id_file_for_tests) {}
 
 
 template<typename T>
@@ -351,7 +350,6 @@ void Work_w_Polygon<T>::MakeCounterClockwiseOrder() {
 
 
 
-
 /*The first dump in latex will start with the input data, so initially we
  * call function connected with latex in here*/
 template<typename T>
@@ -362,7 +360,7 @@ std::istream &polygon::operator>>(std::istream &in, Work_w_Polygon<T> &object) {
 
 
 #ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
-    std::ofstream file_dump(LATEX_REPORT_FILE_PATH);
+    std::ofstream file_dump(PATH_TO_DUMP_BSP_TREE);
     if (!file_dump.is_open()) {
         File_Is_Not_Opened();
     }
@@ -377,5 +375,6 @@ std::istream &polygon::operator>>(std::istream &in, Work_w_Polygon<T> &object) {
     object.Parse_The_String_With_Coordinates_And_Create_Two_Polygons(string_with_input_data_coordinates);
     return in;
 }
+
 
 #undef DUMP_THE_PROCESS_INFORMATION_IN_LATEX

@@ -4,7 +4,7 @@
 
 #include "BSPTree.h"
 
-#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+//#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
 
 /*The definition of the name_dump which represent the section for dumping*/
 #ifdef DUMP_THE_PROCESS_INFORMATION_IN_LATEX
@@ -17,6 +17,16 @@ using namespace bsp;
 template<typename T>
 typename BSPTree_Node<T>::node_ptr BSPTree_Node<T>::get_neg() const {
     return neg_child;
+}
+
+template<typename T>
+void BSPTree_Node<T>::set_neg(node_ptr neg) {
+    neg_child = neg;
+}
+
+template<typename T>
+void BSPTree_Node<T>::set_pos(node_ptr pos) {
+    pos_child = pos;
 }
 
 template<typename T>
@@ -50,6 +60,9 @@ BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
      * which by just computing the (signed) area of one triangle determined
      * by any three consecutive points. This is essentially computing the
      * cross product of the two vectors along the two edges.*/
+    if (coords.empty())
+        return;
+
     coord_type double_signed_area = 0.0;
     int j = 0;
     for (int i = 0; i < 3; ++i) {
@@ -96,7 +109,7 @@ BSPTree<T>::BSPTree(const std::vector <point_type> &coords) {
 template<typename T>
 void BSPTree<T>::Print_Right_Directed_Edges(const std::vector<point_type> &coords) const {
     std::ofstream file_dump;
-    file_dump.open(LATEX_REPORT_FILE_PATH, std::ios::app);
+    file_dump.open(PATH_TO_DUMP_BSP_TREE, std::ios::app);
     if (!file_dump.is_open())
         File_Is_Not_Opened();
     file_dump << "\\section{" << name_dump << " polygon description}\n\n";
@@ -172,14 +185,21 @@ int BSPTree<T>::dump_tree(const_node_ptr node, std::ofstream &out) const {
 
     /*Now it work only for triangles when one node have only one child*/
 
-    if (pos_id != NULL_NODE) {
+    if (pos_id != NULL_NODE && neg_id != NULL_NODE){
+        out << cur_number_node << "->" << pos_id << " [color=red,label=\"pos\"] ";
+        out << cur_number_node << "->" << neg_id << " [color=blue,label=\"neg\"] ";
+    }
+
+    else if (pos_id != NULL_NODE) {
         out << cur_number_node << "->" << pos_id << " [color=red,label=\"pos\"] ";
         out << cur_number_node << "-> -230 [color=blue,style=dotted,label=\"neg\"] ";
     }
-    if (neg_id != NULL_NODE) {
+
+    else if (neg_id != NULL_NODE) {
         out << cur_number_node << "-> -230 [color=red,style=dotted,label=\"pos\"] ";
         out << cur_number_node << "->" << neg_id << " [color=blue,label=\"neg\"] ";
     }
+
 
     return cur_number_node--;
 }
@@ -194,20 +214,61 @@ void BSPTree<T>::Insert_Edge(line_reference line2D) {
 
 //___________________copy costructor implementation_______________________ //
 template<typename T>
-BSPTree<T>::BSPTree(const_bsp_tree_reference copy) : root__(Copy_Tree(copy.root__)), edges(copy.edges) {}
+BSPTree<T>::BSPTree(const_bsp_tree_reference copy) : root__(Copy(copy.root__)), edges(copy.edges) {}
 
 template<typename T>
-typename BSPTree<T>::node_ptr BSPTree<T>::Copy_Tree(const_node_ptr copy_ptr) {
+typename BSPTree<T>::node_ptr BSPTree<T>::Copy(const_node_ptr copy_ptr) {
     if (!copy_ptr)
         return nullptr;
 
-    node_ptr pos_child = Copy_Tree(copy_ptr->get_pos());
-    node_ptr neg_child = Copy_Tree(copy_ptr->get_neg());
+    std::queue<const_node_ptr> queue_1;
+    std::queue<node_ptr> queue_2;
 
-    auto pivotal = new BSPTree_Node<coord_type>(pos_child, neg_child, copy_ptr->get_edge());
-    return pivotal;
+    queue_1.push(copy_ptr);
+    node_ptr new_node = nullptr;
+
+    auto head = new BSPTree_Node<coord_type>(nullptr, nullptr, copy_ptr->get_edge());
+    queue_2.push(head);
+
+    while (!queue_1.empty()) {
+
+        const_node_ptr cur_ptr = queue_1.front();
+        queue_1.pop();
+        new_node = queue_2.front();
+
+        if (cur_ptr->get_pos()) {
+            queue_1.push(cur_ptr->get_pos());
+            auto pos_ch = new BSPTree_Node<coord_type>(nullptr, nullptr, cur_ptr->get_pos()->get_edge());
+            new_node->set_pos(pos_ch);
+            queue_2.push(pos_ch);
+        }
+
+        if (cur_ptr->get_neg()) {
+            queue_1.push(cur_ptr->get_neg());
+            auto neg_ch = new BSPTree_Node<coord_type>(nullptr, nullptr, cur_ptr->get_neg()->get_edge());
+            new_node->set_neg(neg_ch);
+            queue_2.pop();
+            queue_2.push(neg_ch);
+        }
+
+
+    }
+    return head;
 
 }
+
+//template<typename T>
+//typename BSPTree<T>::node_ptr BSPTree<T>::Copy_Tree(const_node_ptr copy_ptr) {
+//    if (!copy_ptr)
+//        return nullptr;
+//
+//    node_ptr pos_child = Copy_Tree(copy_ptr->get_pos());
+//    node_ptr neg_child = Copy_Tree(copy_ptr->get_neg());
+//
+//    auto pivotal = new BSPTree_Node<coord_type>(pos_child, neg_child, copy_ptr->get_edge());
+//    return pivotal;
+//
+//}
 //________________________________________________________________________________________//
 
 //__________________assignment operator_________________________________________________//
@@ -220,10 +281,9 @@ typename BSPTree<T>::bsp_tree_reference BSPTree<T>::operator=(const_bsp_tree_ref
 
     edges = copy.edges;
 
-    //we must to flush the memory form old version of *this
-    Clear_Bsp_Tree(root__);
+    destroy(root__);
 
-    root__ = Copy_Tree(copy.get_root());
+    root__ = Copy(copy.get_root());
 
     return *this;
 }
@@ -231,8 +291,7 @@ typename BSPTree<T>::bsp_tree_reference BSPTree<T>::operator=(const_bsp_tree_ref
 template<typename T>
 BSPTree<T>::~BSPTree() {
 
-    //free memory in in the tree
-    Clear_Bsp_Tree(root__);
+    destroy(root__);
 }
 
 template<typename T>
@@ -363,23 +422,44 @@ void BSPTree<T>::Make_Tree() {
 
     name_dump = "Second";
 
+    file_dump << "\\end{document}\n";
+
     file_dump.close();
 
 #endif
 }
 
 template<typename T>
-void BSPTree<T>::Clear_Bsp_Tree(node_ptr node_edge) {
-    if (!node_edge)
+void BSPTree<T>::destroy(node_ptr edge) {
+    if (!edge)
         return;
+    std::queue<node_ptr> queue;
+    queue.push(edge);
 
-    Clear_Bsp_Tree(node_edge->get_neg());
-    Clear_Bsp_Tree(node_edge->get_pos());
+    while (!queue.empty()) {
+        node_ptr first_node = queue.front();
+        queue.pop();
+        if (first_node->get_pos())
+            queue.push(first_node->get_pos());
+        if (first_node->get_neg())
+            queue.push(first_node->get_neg());
 
-    delete node_edge;
-
-
+        delete first_node;
+    }
 }
+
+//template<typename T>
+//void BSPTree<T>::Clear_Bsp_Tree(node_ptr node_edge) {
+//    if (!node_edge)
+//        return;
+//
+//    Clear_Bsp_Tree(node_edge->get_neg());
+//    Clear_Bsp_Tree(node_edge->get_pos());
+//
+//    delete node_edge;
+//
+//
+//}
 
 template<typename T>
 typename BSPTree_Node<T>::const_line_reference BSPTree_Node<T>::get_edge() const {

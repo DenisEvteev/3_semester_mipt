@@ -9,10 +9,11 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <queue>
 
 #define NULL_NODE -1
 
-#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
+//#define DUMP_THE_PROCESS_INFORMATION_IN_LATEX
 
 using namespace line_tools;
 
@@ -41,6 +42,10 @@ namespace bsp {
         node_ptr get_neg() const;
 
         const_line_reference get_edge() const;
+
+        void set_pos(node_ptr pos);
+
+        void set_neg(node_ptr neg);
 
         BSPTree_Node(node_ptr pos, node_ptr neg, const_line_reference line2D);
 
@@ -104,7 +109,12 @@ namespace bsp {
         void Partitioning_Line_Segment(std::list <line_type> &inside_edges, const_line_reference line2D,
                                        node_ptr polygon_for_intersect);
 
-        void Clear_Bsp_Tree(node_ptr edge);
+        /*This method will clean all the memory allocated to the bsptree*/
+        void destroy(node_ptr edge);
+
+        /*This realization was recursive, as it's a very bad one i had to write an iterative one replacement*/
+//        void Clear_Bsp_Tree(node_ptr edge);
+
 
         /*my realization of bsp tree for polygons gives some disadvantages due to determination whether
          * the point is inside, outside or on the polygon
@@ -156,8 +166,11 @@ namespace bsp {
 
         void Insert_Edge(line_reference line2D);
 
+        node_ptr Copy(const_node_ptr copy_ptr);
+
         //recursive copy of the tree pointed by copy_ptr
-        node_ptr Copy_Tree(const_node_ptr copy_ptr);
+        /*This is a recursive method so i had to create a new one based on the iterative algorithm*/
+//      node_ptr Copy_Tree(const_node_ptr copy_ptr);
 
         void Make_Tree();
 
