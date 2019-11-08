@@ -8,9 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <string.h>
 #include <errno.h>
-#include <wait.h>
 
 #include <sys/types.h>
 #include <unistd.h>
