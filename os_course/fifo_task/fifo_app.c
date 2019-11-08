@@ -1,9 +1,6 @@
 //
 // Created by denis on 25.09.19.
 //
-
-#define _GNU_SOURCE
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,10 +21,14 @@ enum Error_Code {
     ERROR_FCNTL = -3
 };
 
-#define SUCCESS 1
-#define FIFO_MODE 0644
-#define PIPE_BUF 4096
-#define TIME_SLEEP 5
+enum {
+    SUCCESS = 1,
+    FIF0_MODE = 0644,
+    PIPE_BUF = 4096,
+    TIME_SLEEP = 5,
+    //the maximum size_of_bytes in a name of private fifo
+    CLIENT_FIFO_NAME_LEN = 17
+};
 
 #define ERROR_MESSAGE(str)\
     printf("ERROR in line : %d\n", __LINE__);\
@@ -37,9 +38,6 @@ enum Error_Code {
 
 #define SERVER_FIFO "pivotal_fifo"
 #define CLIENT_FIFO_TEMPLATE "cfifo.%d"
-
-//the maximum size_of_bytes in a name of private fifo
-#define CLIENT_FIFO_NAME_LEN 17
 
 char CLIENT_FIFO_PATH[CLIENT_FIFO_NAME_LEN];
 
@@ -55,12 +53,16 @@ int Remove_O_NonBlock(int file_des);
 
 int main(int argc, char *argv[]) {
 
+
     if (argc == 1) {
         Reader_Processes();
 
     } else if (argc == 2) {
+
         Writer_Processes(argv[1]);
+
     } else {
+
         printf("Too many arguments\n");
         exit(EXIT_FAILURE);
     }
