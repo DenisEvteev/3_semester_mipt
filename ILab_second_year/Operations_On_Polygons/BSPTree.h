@@ -109,8 +109,6 @@ namespace bsp {
         /*This method will clean all the memory allocated to the bsptree*/
         void destroy(node_ptr edge);
 
-        /*This realization was recursive, as it's a very bad one i had to write an iterative one replacement*/
-//        void Clear_Bsp_Tree(node_ptr edge);
 
 
         /*my realization of bsp tree for polygons gives some disadvantages due to determination whether
@@ -165,9 +163,6 @@ namespace bsp {
 
         node_ptr Copy(const_node_ptr copy_ptr);
 
-        //recursive copy of the tree pointed by copy_ptr
-        /*This is a recursive method so i had to create a new one based on the iterative algorithm*/
-//      node_ptr Copy_Tree(const_node_ptr copy_ptr);
 
         void Make_Tree();
 

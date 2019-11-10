@@ -257,20 +257,6 @@ typename BSPTree<T>::node_ptr BSPTree<T>::Copy(const_node_ptr copy_ptr) {
 
 }
 
-//template<typename T>
-//typename BSPTree<T>::node_ptr BSPTree<T>::Copy_Tree(const_node_ptr copy_ptr) {
-//    if (!copy_ptr)
-//        return nullptr;
-//
-//    node_ptr pos_child = Copy_Tree(copy_ptr->get_pos());
-//    node_ptr neg_child = Copy_Tree(copy_ptr->get_neg());
-//
-//    auto pivotal = new BSPTree_Node<coord_type>(pos_child, neg_child, copy_ptr->get_edge());
-//    return pivotal;
-//
-//}
-//________________________________________________________________________________________//
-
 //__________________assignment operator_________________________________________________//
 
 
@@ -448,18 +434,6 @@ void BSPTree<T>::destroy(node_ptr edge) {
     }
 }
 
-//template<typename T>
-//void BSPTree<T>::Clear_Bsp_Tree(node_ptr node_edge) {
-//    if (!node_edge)
-//        return;
-//
-//    Clear_Bsp_Tree(node_edge->get_neg());
-//    Clear_Bsp_Tree(node_edge->get_pos());
-//
-//    delete node_edge;
-//
-//
-//}
 
 template<typename T>
 typename BSPTree_Node<T>::const_line_reference BSPTree_Node<T>::get_edge() const {
