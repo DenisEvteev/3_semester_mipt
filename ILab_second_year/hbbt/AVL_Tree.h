@@ -38,10 +38,13 @@ namespace hbbt {
         EXIST
     };
 
+
+    /*In implementation of this class I decided to follow the right rule of the fifth
+     * so I've implemented move constructor and move assignment operator*/
     template < class Key >
     struct AVL_Tree_Node {
         using node_p = AVL_Tree_Node *;
-        using value_type = Key;
+        using const_ref_type = const Key &;
         using u_type = unsigned char;
 
 
@@ -54,7 +57,9 @@ namespace hbbt {
         u_type height_ = 1;
 
 
-        AVL_Tree_Node(value_type key, node_p parent_node);
+        AVL_Tree_Node(const_ref_type key, node_p parent_node);
+
+        explicit AVL_Tree_Node(const_ref_type key);
 
         ~AVL_Tree_Node() = default;
 
@@ -95,6 +100,10 @@ namespace hbbt {
         using const_node_p = const AVL_Tree_Node< Key > *;
         using alloc = Alloc;
         using n_traits = std::allocator_traits< alloc >;
+        using const_ref_type = const Key &;
+        using tree_const_ref = const AVL_Tree &;
+        using tree_ref = AVL_Tree &;
+        using rvalue_ref_type = AVL_Tree &&;
 
 
     public:
@@ -117,6 +126,22 @@ namespace hbbt {
          * initially call of this function will request the file name string where to print
          * the result*/
         void show_tree() const;
+
+        explicit AVL_Tree(const Key &key);
+
+        AVL_Tree(tree_const_ref another_tree);
+
+        tree_ref operator=(tree_const_ref another_tree) &;
+
+        //move constructor
+        AVL_Tree(rvalue_ref_type tempr_tree) noexcept;
+
+        //move assignment operator=
+        tree_ref operator=(rvalue_ref_type tempr_tree) & noexcept;
+
+        AVL_Tree() = default;
+
+
 
 
         ~AVL_Tree();
@@ -211,9 +236,14 @@ namespace hbbt {
 
         void destroy_tree(node_p node);
 
+
+        /*To write some nice words about this function for deleting any tree
+         * but not now I have a lot of other very important work for the moment*/
         void destroy_tree_with_right_rotations(node_p node);
 
-        bool delete_node(const Key &key, node_p node);
+        /*This backend function used by interface function remove
+         * It returns bool value with such a rule :   [return value == true] ==> the node has been deleted from the tree*/
+        bool delete_node(const_ref_type key, node_p node);
 
 
     };

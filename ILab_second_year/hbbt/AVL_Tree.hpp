@@ -9,11 +9,73 @@ using namespace hbbt;
 /*AVL_Tree_Node methods implementation*/
 
 template < class T >
-AVL_Tree_Node< T >::AVL_Tree_Node(value_type key, node_p parent_node) : key_(key), parent_(parent_node) {}
+AVL_Tree_Node< T >::AVL_Tree_Node(const_ref_type key, node_p parent_node) : key_(key), parent_(parent_node) {}
+
+template < class T >
+AVL_Tree_Node< T >::AVL_Tree_Node(const_ref_type key) : key_(key) {}
 
 //---------------------------------------------------------------------------------------//
 
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+AVL_Tree< T, Alloc, Compare >::AVL_Tree(const T &key) {
+    root__ = n_traits::allocate(allocator_, 1);
+    //the case when operating system hasn't managed with allocating the memory --- return with error message
+    if (!root__) {
+        ERROR_MESSAGE
+        return;
+    }
 
+    n_traits::construct(allocator_, root__, key);
+}
+
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+AVL_Tree< T, Alloc, Compare >::AVL_Tree(tree_const_ref another_tree) {
+    root__ = Copy(another_tree.root__);
+}
+
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+AVL_Tree< T, Alloc, Compare > &AVL_Tree< T, Alloc, Compare >::operator=(tree_const_ref another_node) &{
+    if (&another_node == this)
+        return *this;
+
+    destroy_tree_with_right_rotations(root__);
+    root__ = Copy(another_node.root__);
+
+    return *this;
+}
+
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+AVL_Tree< T, Alloc, Compare >::AVL_Tree(rvalue_ref_type tempr_tree) noexcept {
+    root__ = tempr_tree.root__;
+    tempr_tree.root__ = nullptr;
+}
+
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+AVL_Tree< T, Alloc, Compare > &AVL_Tree< T, Alloc, Compare >::operator=(rvalue_ref_type tempr_tree) & noexcept {
+    destroy_tree_with_right_rotations(root__);
+    root__ = tempr_tree.root__;
+    tempr_tree.root__ = nullptr;
+}
 
 template <
         class T,
@@ -30,17 +92,19 @@ AVL_Tree< T, Alloc, Compare >::~AVL_Tree() {
  *
  *
  * This algorithm require only one extra queue of pointers*/
-//template <
-//        class T,
-//        class Alloc,
-//        class Compare
-//         >
-//void AVL_Tree< T, Alloc, Compare >::destroy_tree(node_p node) {
-//    if (!node)
-//        return;
-//
-//
-//}
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+void AVL_Tree< T, Alloc, Compare >::destroy_tree(node_p node) {
+    if (!node)
+        return;
+
+    std::cout << __PRETTY_FUNCTION__ << "has worked\n";
+
+
+}
 
 
 //This function start print right from the root__ node
@@ -187,10 +251,30 @@ AVL_Tree_Node< T > *AVL_Tree< T, Alloc, Compare >::Copy(const_node_p start_node)
                     new_cur = new_cur->parent_;
                     if (save == old_cur->left_ch_)
                         break;
-                    else return head;
+                    continue;
                 } else return head;
             }
         }
+    }
+
+
+}
+
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+bool AVL_Tree< T, Alloc, Compare >::delete_node(const_ref_type key, node_p node) {
+    if (!node)
+        return false;
+
+    unsigned char flag = 0;
+    node_p cur_n = find(key, node, flag);
+    if (flag == LEFT || flag == RIGHT)
+        return false;
+    else {
+
     }
 
 
