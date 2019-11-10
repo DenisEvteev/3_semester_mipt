@@ -119,7 +119,7 @@ namespace hbbt {
         void show_tree() const;
 
 
-        ~AVL_Tree() = default;
+        ~AVL_Tree();
         /*---------------*/
 
     private:

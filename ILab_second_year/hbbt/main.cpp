@@ -12,15 +12,15 @@ int main() {
     hbbt::AVL_Tree< int, TrackingAllocator< AVL_Tree_Node< int>> > first_try;
 
 
-    for (int i = 0; i < 50; ++i)
+    for (int i = 0; i < 1000; ++i)
         first_try.push(i);
 
 
-    hbbt::AVL_Tree< int, TrackingAllocator< AVL_Tree_Node< int>> > second_try = first_try;
+    //hbbt::AVL_Tree< int, TrackingAllocator< AVL_Tree_Node< int>> > second_try = first_try;
 
     first_try.show_tree();
 
-    second_try.show_tree();
+    //second_try.show_tree();
 
     return 0;
 }

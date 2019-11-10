@@ -15,10 +15,14 @@ AVL_Tree_Node< T >::AVL_Tree_Node(value_type key, node_p parent_node) : key_(key
 
 
 
-//template<class T, class Alloc, class Compare>
-//AVL_Tree<T, Alloc, Compare>::~AVL_Tree() {
-//    destroy_tree_with_right_rotations(root__);
-//}
+template <
+        class T,
+        class Alloc,
+        class Compare
+         >
+AVL_Tree< T, Alloc, Compare >::~AVL_Tree() {
+    destroy_tree_with_right_rotations(root__);
+}
 
 /*AVL_Tree methods implementation and it is an iterative one due to clearing
  * in with a recursive one will be to stack memory costly (it will create a lot of stack frames and as the compiler
@@ -26,17 +30,17 @@ AVL_Tree_Node< T >::AVL_Tree_Node(value_type key, node_p parent_node) : key_(key
  *
  *
  * This algorithm require only one extra queue of pointers*/
-template <
-        class T,
-        class Alloc,
-        class Compare
-         >
-void AVL_Tree< T, Alloc, Compare >::destroy_tree(node_p node) {
-    if (!node)
-        return;
-
-
-}
+//template <
+//        class T,
+//        class Alloc,
+//        class Compare
+//         >
+//void AVL_Tree< T, Alloc, Compare >::destroy_tree(node_p node) {
+//    if (!node)
+//        return;
+//
+//
+//}
 
 
 //This function start print right from the root__ node
@@ -106,7 +110,8 @@ void AVL_Tree< T, Alloc, Compare >::destroy_tree_with_right_rotations(node_p nod
         return;
     for (;;) {
         if (node->left_ch_) {
-            node = right_rotation(node);
+            right_rotation(node);
+            node = root__;
             continue;
         }
         node_p save = node->right_ch_;
