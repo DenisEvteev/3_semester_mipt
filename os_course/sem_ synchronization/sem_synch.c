@@ -13,40 +13,21 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#if _SEM_SEMUN_UNDEFINED == 1
-union semun
-{
-    int val;
-    struct semid_ds *buf;
-    unsigned short *array;
-#if defined(__linux__)
-    struct seminfo *__buf;
-#endif
-};
-#endif
-
 #define NORETURN __attribute__((noreturn))
 
 #define PROJECT_ID_SEM '$'
 #define PROJECT_ID_SHM '*'
 
-/*In my application I will need 4 semaphores for synch between processes during sharing data
- * using shared memory object and some words about the mission of each of them :
- *
- * [0] --- for synch between each writing process                                                (initial value 1)
- * [1] --- --------//------------ reading -------                                                (------------- 1)
- * [2] --- for synch between one pair of writing and reading process in writing to shared memory (--------------1)
- * [3] --- -------------------------//--------------------------------- reading from ----------- (--------------0)*/
-
 enum
 {
     NUMBER_SEMAPHORES = 4,
     PERMS = 0666,
-    INITIAL_VALUE = 1,
     DECREASE = -1,
     INCREASE = 1,
     SUBTRACT_TWO = -2,
+    ADD_TWO = 2,
     SIZE_BUF = 4092,
+    MAX_NUMBER_OF_OPERATIONS = 7
 
 };
 
@@ -75,7 +56,7 @@ struct shmseg
  *
  * Due to the maximum number of operation to perform on the semaphore set is 5 so the size of this
  * array is corresponding*/
-struct sembuf sops[NUMBER_SEMAPHORES + 1] = {};
+struct sembuf sops[MAX_NUMBER_OF_OPERATIONS] = {};
 
 /*This global variable will be the index in the array of semaphore operations*/
 short num_oper;
@@ -85,8 +66,6 @@ short num_oper;
 /*Print just an message about the error and corresponding value of errno*/
 void
 err_exit(const char *str) NORETURN;
-void
-init_semaphore_set(int sem_id);
 int
 create_semaphore_set();
 int
@@ -106,12 +85,10 @@ main(int argc, char *argv[])
 
     errno = 0;
 
-    int sem_id = create_semaphore_set();
+    int sem_id = create_semaphore_set(argc);
 
     int shm_id = create_shared_memory_object();
 
-    if (shmctl(shm_id, IPC_RMID, NULL) == -1)
-        err_exit("error in shmctl IPC_RMID");
 
     switch (argc)
     {
@@ -144,18 +121,28 @@ writer(const char *file_path, int sem_id, int shm_id)
     if (file_data_fd == -1)
         err_exit("error in opening data file");
 
-    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, DECREASE);
-    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, INCREASE);
-    mark_operation_sem(sem_id, SYNCH_READERS, SEM_UNDO, DECREASE);
-    apply_operations_sem(sem_id, 3);
-
     mark_operation_sem(sem_id, SYNCH_WRITERS, 0, 0);
-    mark_operation_sem(sem_id, ENTRY_WRITING, SEM_UNDO, SUBTRACT_TWO);
-    mark_operation_sem(sem_id, ENTRY_WRITING, SEM_UNDO, INCREASE);
-    apply_operations_sem(sem_id, 3);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, INCREASE);
+    mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
+    mark_operation_sem(sem_id, ENTRY_WRITING, 0, INCREASE);
+    mark_operation_sem(sem_id, SYNCH_READERS, 0, DECREASE);
+    mark_operation_sem(sem_id, SYNCH_READERS, SEM_UNDO, INCREASE);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, INCREASE);
+    apply_operations_sem(sem_id, 7);
 
     for (;;)
     {
+
+        mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, DECREASE);
+        mark_operation_sem(sem_id, SYNCH_READERS, 0, INCREASE);
+        mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
+        apply_operations_sem(sem_id, 3);
+
+        segment->bytes = read(file_data_fd, segment->buf, SIZE_BUF);
+
+        if (segment->bytes == -1)
+            err_exit("error in reading data from file");
+
         if (id == 0)
         {
             flag = SEM_UNDO;
@@ -164,18 +151,10 @@ writer(const char *file_path, int sem_id, int shm_id)
         else
             flag = 0;
 
-        mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, 0);
-        mark_operation_sem(sem_id, ENTRY_WRITING, flag, DECREASE);
-        apply_operations_sem(sem_id, 2);
-
-        segment->bytes = read(file_data_fd, segment->buf, SIZE_BUF);
-
-        if (segment->bytes == -1)
-            err_exit("error in reading data from file");
-
-        mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, 0);
+        mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, DECREASE);
+        mark_operation_sem(sem_id, SYNCH_READERS, 0, INCREASE);
         mark_operation_sem(sem_id, ENTRY_READING, flag, INCREASE);
-        apply_operations_sem(sem_id, 2);
+        apply_operations_sem(sem_id, 3);
 
         /*When file with data is entirely transferred and the current offset at the end of it
          * then read returns zero so we break from the loop*/
@@ -185,14 +164,18 @@ writer(const char *file_path, int sem_id, int shm_id)
 
     if (shmdt(segment) == -1)
         err_exit("error in shmdt in writer process");
+
+    close(file_data_fd);
+
+
     /*process blocks until reader change the value of the semaphore
      * for writing; only after the read process detach the shared memory
      * the write process check of the existence of other processes and remove the sources*/
-    mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, 0);
+    mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, DECREASE);
+    mark_operation_sem(sem_id, SYNCH_READERS, 0, INCREASE);
     mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
-    apply_operations_sem(sem_id, 2);
+    apply_operations_sem(sem_id, 3);
 
-    close(file_data_fd);
 
     exit(EXIT_SUCCESS);
 }
@@ -202,34 +185,31 @@ reader(int sem_id, int shm_id)
 {
     assert(sem_id >= 0 && shm_id >= 0);
     u_int recorded_bytes = 0;
-    short id = 0;
-    short flag = 0;
 
     struct shmseg *segment = shmat(shm_id, NULL, SHM_RDONLY);
     if (segment == BAD_ADR)
         err_exit("error in shmat in reader process");
 
-    mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
-    mark_operation_sem(sem_id, ENTRY_WRITING, 0, INCREASE);
-    mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, DECREASE);
     mark_operation_sem(sem_id, SYNCH_READERS, 0, 0);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, 0);
+    mark_operation_sem(sem_id, SYNCH_READERS, SEM_UNDO, INCREASE);
     mark_operation_sem(sem_id, ENTRY_WRITING, SEM_UNDO, INCREASE);
-    apply_operations_sem(sem_id, 5);
-    /*The process can at this moment operate the transferring the data*/
+    mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, INCREASE);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, DECREASE);
+    apply_operations_sem(sem_id, 6);
+
+    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, DECREASE);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, 0, INCREASE);
+    apply_operations_sem(sem_id, 2);
+
 
     for (;;)
     {
-        if (id == 0)
-        {
-            flag = SEM_UNDO;
-            id = 1;
-        }
-        else
-            flag = 0;
 
-        mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, 0);
+        mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, SUBTRACT_TWO);
+        mark_operation_sem(sem_id, SYNCH_WRITERS, 0, ADD_TWO);
         mark_operation_sem(sem_id, ENTRY_READING, 0, DECREASE);
-        apply_operations_sem(sem_id, 2);
+        apply_operations_sem(sem_id, 3);
 
         /*As we have attached the shared memory to the virtual space of read process, so
          * as soon as the write process write some data in it. It entirely become avaliable to the
@@ -244,13 +224,14 @@ reader(int sem_id, int shm_id)
         //check if we read all right number of butes from shared memory
         assert(recorded_bytes == segment->bytes);
 
-        mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, 0);
-        mark_operation_sem(sem_id, ENTRY_WRITING, flag, INCREASE);
-        apply_operations_sem(sem_id, 2);
+        mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, SUBTRACT_TWO);
+        mark_operation_sem(sem_id, SYNCH_WRITERS, 0, ADD_TWO);
+        mark_operation_sem(sem_id, ENTRY_WRITING, 0, INCREASE);
+        apply_operations_sem(sem_id, 3);
 
         if (segment->bytes == 0)
             break;
-    }                                           //end critical external for readers fight for shared
+    }
 
     if (shmdt(segment) == -1)
         err_exit("error in shmdt in reader process");
@@ -258,54 +239,21 @@ reader(int sem_id, int shm_id)
     exit(EXIT_SUCCESS);
 }
 
-/*Filling the semaphore set with initial values
- *
- *
- * One important NOTE :
- * when applying semctl SETALL operation to a semaphore set the semadj variable set to zero*/
-void
-init_semaphore_set(int sem_id)
-{
-    assert(sem_id >= 0);
-
-    union semun arg;
-    arg.array = calloc(NUMBER_SEMAPHORES, sizeof(arg.array[0]));
-    if (!arg.array)
-        err_exit("error calloc");
-    for (int i = 0; i < NUMBER_SEMAPHORES - 1; ++i)
-        arg.array[i] = INITIAL_VALUE;
-
-    if (semctl(sem_id, 0, SETALL, arg) == -1)
-        err_exit("error in initialization semaphore set");
-
-    free(arg.array);
-}
-
 int
 create_semaphore_set()
 {
     int sem_id = 0;
-
-    /*Generate the key value for creating the common semaphore set and shared memory
-     * resource in both reader and writer process*/
     key_t key = ftok(__FILE__, PROJECT_ID_SEM);
     if (key == -1)
         err_exit("error in ftok for sem");
 
-    sem_id = semget(key, NUMBER_SEMAPHORES, PERMS | IPC_CREAT | IPC_EXCL);
-    if (sem_id == -1 && errno != EEXIST)
+    sem_id = semget(key, NUMBER_SEMAPHORES, PERMS | IPC_CREAT);
+    if (sem_id == -1)
         err_exit("error in semget");
 
-    if (errno != EEXIST)
-        init_semaphore_set(sem_id);
-    else
-    {
-        sem_id = semget(key, 0, PERMS);
-        if (sem_id == -1)
-            err_exit("error in getting identifier of semaphore set");
-    }
     return sem_id;
 }
+
 
 int
 create_shared_memory_object()
@@ -354,19 +302,9 @@ apply_operations_sem(int sem_id, short number)
 {
     assert(sem_id >= 0 && number > 0);
 
-    if (semop(sem_id, sops, number) == -1 && errno != EAGAIN)
+    if (semop(sem_id, sops, number) == -1)
         err_exit("error in semop");
-    else if (errno == EAGAIN)
-    {
-        union semun arg;
-        arg.val = 1;
-        if (semctl(sem_id, ENTRY_WRITING, SETVAL, arg) == -1)
-            err_exit("error in semclt SETVAL ENTRY_WRITING");
-
-        exit(EXIT_FAILURE);
-    }
     num_oper = 0;
 }
-
 
 #undef NORETURN
