@@ -85,7 +85,7 @@ main(int argc, char *argv[])
 
     errno = 0;
 
-    int sem_id = create_semaphore_set(argc);
+    int sem_id = create_semaphore_set();
 
     int shm_id = create_shared_memory_object();
 
@@ -174,7 +174,9 @@ writer(const char *file_path, int sem_id, int shm_id)
     mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, DECREASE);
     mark_operation_sem(sem_id, SYNCH_READERS, 0, INCREASE);
     mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
-    apply_operations_sem(sem_id, 3);
+    mark_operation_sem(sem_id, SYNCH_READERS, SEM_UNDO, DECREASE);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, DECREASE);
+    apply_operations_sem(sem_id, 5);
 
 
     exit(EXIT_SUCCESS);
@@ -221,7 +223,7 @@ reader(int sem_id, int shm_id)
         if (recorded_bytes == -1)
             err_exit("error in writing data from shared memory to stdout");
 
-        //check if we read all right number of butes from shared memory
+        //check if we read all right number of bytes from shared memory
         assert(recorded_bytes == segment->bytes);
 
         mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, SUBTRACT_TWO);
@@ -235,6 +237,13 @@ reader(int sem_id, int shm_id)
 
     if (shmdt(segment) == -1)
         err_exit("error in shmdt in reader process");
+
+    mark_operation_sem(sem_id, SYNCH_READERS, 0, 0);
+    mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, DECREASE);
+    apply_operations_sem(sem_id, 2);
+
+    if (shmctl(shm_id, IPC_RMID, NULL) == -1)
+        err_exit("error in shmctl IPC_RMID");
 
     exit(EXIT_SUCCESS);
 }
