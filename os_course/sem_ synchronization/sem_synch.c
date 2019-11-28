@@ -240,7 +240,8 @@ reader(int sem_id, int shm_id)
 
     mark_operation_sem(sem_id, SYNCH_READERS, 0, 0);
     mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, DECREASE);
-    apply_operations_sem(sem_id, 2);
+    mark_operation_sem(sem_id, ENTRY_WRITING, IPC_NOWAIT, 0);
+    apply_operations_sem(sem_id, 3);
 
     if (shmctl(shm_id, IPC_RMID, NULL) == -1)
         err_exit("error in shmctl IPC_RMID");
