@@ -27,7 +27,7 @@ enum
     SUBTRACT_TWO = -2,
     ADD_TWO = 2,
     SIZE_BUF = 4092,
-    MAX_NUMBER_OF_OPERATIONS = 7
+    MAX_NUMBER_OF_OPERATIONS = 9
 
 };
 
@@ -110,8 +110,6 @@ void
 writer(const char *file_path, int sem_id, int shm_id)
 {
     assert(file_path && sem_id >= 0 && shm_id >= 0);
-    short id = 0;
-    short flag = 0;
 
     struct shmseg *segment = shmat(shm_id, NULL, 0);
     if (segment == BAD_ADR)
@@ -128,7 +126,11 @@ writer(const char *file_path, int sem_id, int shm_id)
     mark_operation_sem(sem_id, SYNCH_READERS, 0, DECREASE);
     mark_operation_sem(sem_id, SYNCH_READERS, SEM_UNDO, INCREASE);
     mark_operation_sem(sem_id, SYNCH_WRITERS, 0, INCREASE);
-    apply_operations_sem(sem_id, 7);
+    //marking the adding one to ENTRY_READING with UNDO flag
+    mark_operation_sem(sem_id, ENTRY_READING, SEM_UNDO, INCREASE);
+    mark_operation_sem(sem_id, ENTRY_READING, 0, DECREASE);
+    apply_operations_sem(sem_id, 9);                              //start external critical : resource writer processes
+
 
     for (;;)
     {
@@ -136,25 +138,18 @@ writer(const char *file_path, int sem_id, int shm_id)
         mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, DECREASE);
         mark_operation_sem(sem_id, SYNCH_READERS, 0, INCREASE);
         mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
-        apply_operations_sem(sem_id, 3);
+        apply_operations_sem(sem_id, 3);                           //start internal critical : shared memory
 
         segment->bytes = read(file_data_fd, segment->buf, SIZE_BUF);
 
         if (segment->bytes == -1)
             err_exit("error in reading data from file");
 
-        if (id == 0)
-        {
-            flag = SEM_UNDO;
-            id = 1;
-        }
-        else
-            flag = 0;
 
         mark_operation_sem(sem_id, SYNCH_READERS, IPC_NOWAIT, DECREASE);
         mark_operation_sem(sem_id, SYNCH_READERS, 0, INCREASE);
-        mark_operation_sem(sem_id, ENTRY_READING, flag, INCREASE);
-        apply_operations_sem(sem_id, 3);
+        mark_operation_sem(sem_id, ENTRY_READING, 0, INCREASE);
+        apply_operations_sem(sem_id, 3);                          //finish internal critical
 
         /*When file with data is entirely transferred and the current offset at the end of it
          * then read returns zero so we break from the loop*/
@@ -176,7 +171,7 @@ writer(const char *file_path, int sem_id, int shm_id)
     mark_operation_sem(sem_id, ENTRY_WRITING, 0, DECREASE);
     mark_operation_sem(sem_id, SYNCH_READERS, SEM_UNDO, DECREASE);
     mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, DECREASE);
-    apply_operations_sem(sem_id, 5);
+    apply_operations_sem(sem_id, 5);                                       //finish external critical
 
 
     exit(EXIT_SUCCESS);
@@ -198,7 +193,7 @@ reader(int sem_id, int shm_id)
     mark_operation_sem(sem_id, ENTRY_WRITING, SEM_UNDO, INCREASE);
     mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, INCREASE);
     mark_operation_sem(sem_id, SYNCH_WRITERS, 0, DECREASE);
-    apply_operations_sem(sem_id, 6);
+    apply_operations_sem(sem_id, 6);                         // start external critical : reader processes
 
     mark_operation_sem(sem_id, SYNCH_WRITERS, 0, DECREASE);
     mark_operation_sem(sem_id, SYNCH_WRITERS, 0, INCREASE);
@@ -211,7 +206,7 @@ reader(int sem_id, int shm_id)
         mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, SUBTRACT_TWO);
         mark_operation_sem(sem_id, SYNCH_WRITERS, 0, ADD_TWO);
         mark_operation_sem(sem_id, ENTRY_READING, 0, DECREASE);
-        apply_operations_sem(sem_id, 3);
+        apply_operations_sem(sem_id, 3);                          // start internal critical : shared memory
 
         /*As we have attached the shared memory to the virtual space of read process, so
          * as soon as the write process write some data in it. It entirely become avaliable to the
@@ -229,7 +224,7 @@ reader(int sem_id, int shm_id)
         mark_operation_sem(sem_id, SYNCH_WRITERS, IPC_NOWAIT, SUBTRACT_TWO);
         mark_operation_sem(sem_id, SYNCH_WRITERS, 0, ADD_TWO);
         mark_operation_sem(sem_id, ENTRY_WRITING, 0, INCREASE);
-        apply_operations_sem(sem_id, 3);
+        apply_operations_sem(sem_id, 3);                       // end internal critical
 
         if (segment->bytes == 0)
             break;
@@ -241,7 +236,7 @@ reader(int sem_id, int shm_id)
     mark_operation_sem(sem_id, SYNCH_READERS, 0, 0);
     mark_operation_sem(sem_id, SYNCH_WRITERS, SEM_UNDO, DECREASE);
     mark_operation_sem(sem_id, ENTRY_WRITING, IPC_NOWAIT, 0);
-    apply_operations_sem(sem_id, 3);
+    apply_operations_sem(sem_id, 3);                             //finish external critical
 
     if (shmctl(shm_id, IPC_RMID, NULL) == -1)
         err_exit("error in shmctl IPC_RMID");
