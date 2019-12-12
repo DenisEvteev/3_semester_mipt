@@ -234,6 +234,13 @@ host(link_t *connections, unsigned n) {
 
                 if (connections[counter].size_ == 0 && into == 0)
                     break;
+                if (connections[counter].size_ == 0 && counter) {
+                    /*It is the case when some of the children has been killed abnormally.
+                     * I will consider this situation very bad due to all the children read in block mode
+                     * so they must wait until their host will die and only after it they can be terminated.
+                     * So I want to terminate host in this case ===> all file descriptors and memory will be freed*/
+                    exit(EXIT_FAILURE);
+                }
 
                 ++finished_operations;
             }
