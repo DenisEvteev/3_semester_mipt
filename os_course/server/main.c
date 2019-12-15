@@ -59,7 +59,8 @@ typedef struct link_t {
 
 enum {
     BASE = 10,
-    EMPTY_FD = -1
+    EMPTY_FD = -1,
+    INITIAL_VALUE = -1
 };
 
 enum SIZE {
@@ -68,7 +69,7 @@ enum SIZE {
 };
 
 int
-child(int fd_read, int fd_write);
+child(int n, int fd_read, int fd_write);
 
 int
 host(link_t *connections, unsigned n);
@@ -140,7 +141,7 @@ main(int argc, char *argv[]) {
 
     //children
     if (!pid) {
-        i ? child(connections[i - 1].p_out[0], connections[i].p_in[1]) : child(fd, connections[i].p_in[1]);
+        i ? child(i, connections[i - 1].p_out[0], connections[i].p_in[1]) : child(i, fd, connections[i].p_in[1]);
     } else {
         for (int i = 0; i < n; ++i) {
             if (i != n - 1)
@@ -180,32 +181,32 @@ host(link_t *connections, unsigned n) {
         assert(connections[i].buf);
     }
 
-    size_t into = 0;
-    size_t from = 0;
+    int number_process_to_die = INITIAL_VALUE;
+    int is_dead = 0;
 
-
-    int death_first_ch = 0;
     ssize_t write_b = 0;
+    fd_set rd, wr;
+    int n_acts = 0;
 
     for (;;) {
-        fd_set rd, wr;
         FD_ZERO(&rd);
         FD_ZERO(&wr);
 
+        n_acts = 0;
 
         for (int i = 0; i < n; ++i) {
-            if (connections[i].size_ == 0) {
-                if (i == 0) {
-                    if (death_first_ch == 0)
-                        FD_SET(connections[0].p_in[0], &rd);
-                } else
-                    FD_SET(connections[i].p_in[0], &rd);
+            if (connections[i].size_ == 0 && i > number_process_to_die) {
+                FD_SET(connections[i].p_in[0], &rd);
+                ++n_acts;
             }
 
-            if (connections[i].size_ != 0) {
+            if (connections[i].size_ != 0 || (i == number_process_to_die && !is_dead)) {
                 FD_SET(connections[i].p_out[1], &wr);
+                ++n_acts;
             }
         }
+
+        if (n_acts == 0) break;
 
         int number_fd = select(connections[n - 1].cur_max_fd + 1, &rd, &wr, NULL, NULL);
         if (number_fd == -1)
@@ -221,27 +222,14 @@ host(link_t *connections, unsigned n) {
                 connections[counter].size_ = read(connections[counter].p_in[0], connections[counter].buf,
                                                   connections[counter].cap_);
 
-
                 if (connections[counter].size_ == -1)
                     error("read error");
 
-                if (counter == 0) {
-                    into += connections[counter].size_;
-
-                    if (connections[counter].size_ == 0)
-                        death_first_ch = 1;
+                if (connections[counter].size_ == 0) {
+                    c_c(connections[counter].p_in[0]);
+                    number_process_to_die = counter;
+                    is_dead = 0;
                 }
-
-                if (connections[counter].size_ == 0 && into == 0)
-                    break;
-                if (connections[counter].size_ == 0 && counter) {
-                    /*It is the case when some of the children has been killed abnormally.
-                     * I will consider this situation very bad due to all the children read in block mode
-                     * so they must wait until their host will die and only after it they can be terminated.
-                     * So I want to terminate host in this case ===> all file descriptors and memory will be freed*/
-                    exit(EXIT_FAILURE);
-                }
-
                 ++finished_operations;
             }
 
@@ -257,43 +245,39 @@ host(link_t *connections, unsigned n) {
                 connections[counter].off_wr += write_b;
                 connections[counter].size_ -= write_b;
 
-                if (connections[counter].size_ == 0)
-                    connections[counter].off_wr = 0;
-
-                if (counter == n - 1)
-                    from += write_b;
-
+                if (connections[counter].size_ == 0) {
+                    if (counter == number_process_to_die) {
+                        if (counter != n - 1)
+                            c_c(connections[counter].p_out[1]);
+                        is_dead = 1;
+                    } else
+                        connections[counter].off_wr = 0;
+                }
                 ++finished_operations;
             }
 
             ++counter;
         }
 
-        if ((from && (from == into) && death_first_ch) ||
-            (connections[counter].size_ == 0 && into == 0)) {
-            break;
-        }
-
     }
 
-    for (int j = 0; j < n; ++j) {
-        c_c(connections[j].p_in[0]);
-        c_c(connections[j].p_out[1]);
+    for (int j = 0; j < n; ++j)
         free(connections[j].buf);
-    }
+
     return 0;
 }
 
 
 int
-child(int fd_read, int fd_write) {
-    assert(fd_read >= 0 && fd_write >= 0);
+child(int n, int fd_read, int fd_write) {
+    assert(fd_read >= 0 && fd_write >= 0 && n >= 0);
     char *buf = calloc(PIPE_BUF, sizeof(char));
 
     ssize_t bytes_r = 0;
     ssize_t bytes_w = 0;
 
     while ((bytes_r = read(fd_read, buf, PIPE_BUF)) > 0) {
+
         if ((bytes_w = write(fd_write, buf, bytes_r)) == -1)
             error("error write");
 
