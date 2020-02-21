@@ -65,9 +65,6 @@ void parent(pid_t child_pid)NORETURN;
 
 void setting_mask_handlers();
 
-/*I have such a strange problem (aka bug) in my program that I must fix it
- * with the same input data the program give different output result that is a very strange fact*/
-
 int main(int argc, char **argv) {
     if (argc != 2) {
         errno = E2BIG;
@@ -200,7 +197,7 @@ void parent(pid_t child_pid) {
     for (;;) { //endless loop in parent --- the reason for going out from it is SIGCHLD signal
 
         for (int i = NUMBER_BITS; i >= 0; --i) {
-            if (sigsuspend(&zero) == -1 && errno != EINTR)
+            if (sigsuspend(&zero) == -1 && errno != EINTR)     //here is the critical sectio n
                 sys_error("sigsuspend in parent");
             if (GLOBAL_BIT == SIGUSR2) // bit 1 -- set 1 to the i position
                 letter |= (1 << i);
