@@ -28,12 +28,19 @@ from the system.
 #include <wait.h>
 
 
+/*When a signal is sent from one process to another one It's added by the os to the process's (which
+ * will deliver it) mask of pending signals, so we cannot say exactly when a signal will be delivered to
+ * the process (but we can suppose then at the next time it will be sheduled to run) so the mask of pending
+ * signals preserve this information and as I can understand that if the process has a block_signal_mask
+ * then a signal can remain in mask of pending signals until a process remove it from block mask !!!*/
+
 /*Signal disposition and signal mask is inherited via fork()*/
 #define NUMBER_BITS 7
 
 #define NORETURN __attribute__((noreturn))
 
 int GLOBAL_BIT;
+
 sigjmp_buf env;
 
 #define sys_error(str)                                       \
@@ -73,8 +80,6 @@ int main(int argc, char **argv) {
     pid_t parent_pid = getpid();
 
     setting_mask_handlers();
-
-
     pid_t pid = fork();
 
     if (pid > 0) // parent
@@ -197,14 +202,13 @@ void parent(pid_t child_pid) {
     for (;;) { //endless loop in parent --- the reason for going out from it is SIGCHLD signal
 
         for (int i = NUMBER_BITS; i >= 0; --i) {
-            if (sigsuspend(&zero) == -1 && errno != EINTR)     //here is the critical sectio n
-                sys_error("sigsuspend in parent");
-            if (GLOBAL_BIT == SIGUSR2) // bit 1 -- set 1 to the i position
-                letter |= (1 << i);
-            else if (GLOBAL_BIT == SIGUSR1) // bit 0 -- set 0 to the i position
-                letter &= ~(1 << i);
-            /*Send the notification to the child that it can
-             * transfer the data further*/
+			if (sigsuspend(&zero) == -1 && errno != EINTR)
+				sys_error("sigsuspend in parent");
+			if (GLOBAL_BIT == SIGUSR2) // bit 1 -- set 1 to the i position
+				letter |= (1 << i);
+			else if (GLOBAL_BIT == SIGUSR1) // bit 0 -- set 0 to the i position
+				letter &= ~(1 << i);
+
             if (i == 0) {
                 int write_b = write(STDOUT_FILENO, &letter, sizeof(char));
                 if (write_b != sizeof(char))
@@ -230,8 +234,8 @@ void handler_sigio(int sig) {}
 void handler_sigio_parent(int sig) {
     struct sigaction act;
     act.sa_handler = SIG_DFL;
-    if (sigaction(SIGIO, &act, NULL) == -1)
-        sys_error("sigaction SIGIO");
+	if (sigaction(SIGCHLD, &act, NULL) == -1)
+		sys_error("sigaction SIGIO");
 
     siglongjmp(env, sig);
 }
